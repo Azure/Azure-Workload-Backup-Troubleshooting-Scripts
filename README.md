@@ -1,33 +1,93 @@
-# Project
+# Azure Workoad Snapshot Pre-Req Scripts
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+> Contains the scripts for setting up the permissions for virtual machine identity on required resources
+> and resource group for snapshot backups dones by Azure workload backup extensions.
 
-As the maintainer of this project, please make a few updates:
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
 
-## Contributing
++ For Backup
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+Azure virtual machine containing the source workload requires the following roles 
 
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-## Trademarks
+Resource (Access control)  |Role   
+------ | ------
+Disk(s) attached to the source VM (or the Disk RG), that are getting snapshotted |Disk backup reader |
+|Resource group (RG) in which the snapshots taken would be stored (specified at the time of creating backup policy) |Disk snapshot contributor  |
 
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
-trademarks or logos is subject to and must follow 
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.
++ For Restore
+
+Azure virtual machine containing the target workload requires the following roles 
+
+Resource (Access control)  |Role   
+------ | ------
+|Snapshot RG where the snapshots would be restored   |Disk snapshot contributor  |
+|Target Disk RG where all disks will be created during restore  |Disk Restore operator   |
+|Source Disk RG (RG where all existing disks of target VM are present)   |Disk Restore operator   |
+|Target VM     |Virtual Machine Contributor    |
+
+## Requirements
+
+The following Powershell modules are required for the scripts
+
++ Az.Compute
++ Az.Accounts
++ Az.Resources
+
+## Usage 
+
+### Backup
+Before the snapshot backup, use the following script to give the required roles to the virtual machine system identity
+
+```powershell
+.\SetWorkloadSnapshotBackupPermissions.ps1 -Subscription <SubscriptionId> `
+            -VirtualMachineResourceGroup <VMResourceGroup> `
+            -VirtualMachineName <SourceWorkloadVMName> `
+            -DiskResourceGroups <DiskResourceGroupsName>,<DiskResourceGroupsName> `
+            -SnapshotResourceGroup <SnapshotResourceGroupName>
+```
+
+Before the snapshot backup, use the following script to give the required roles to the user identity
+
+```powershell
+.\SetWorkloadSnapshotBackupPermissions.ps1 -Subscription <SubscriptionId> `
+            -VirtualMachineResourceGroup <VMResourceGroup> `
+            -VirtualMachineName <SourceWorkloadVMName> `
+            -DiskResourceGroups <DiskResourceGroupsName>,<DiskResourceGroupsName> `
+            -SnapshotResourceGroup <SnapshotResourceGroupName> `
+            -UserAssignedServiceIdentityId <UserIdentityPrincipalId>
+```
+
+Run the following to get more help on the parameters
+```powershell
+Get-Help SetWorkloadSnapshotBackupPermissions.ps1
+```
+
+### Restore
+
+Before the snapshot disk restore, use the following script to give the required roles to the virtual machine system identity
+
+```powershell
+.\SetWorkloadSnapshotRestorePermissions.ps1 -Subscription <SubscriptionId> `
+            -VirtualMachineResourceGroup <VMResourceGroup> `
+            -VirtualMachineName <SourceWorkloadVMName> `
+            -DiskResourceGroups <DiskResourceGroupsName>,<DiskResourceGroupsName> `
+            -SnapshotResourceGroup <SnapshotResourceGroupName>
+```
+
+Before the snapshot backup, use the following script to give the required roles to the user identity
+
+```powershell
+.\SetWorkloadSnapshotRestorePermissions.ps1 -Subscription <SubscriptionId> `
+            -VirtualMachineResourceGroup <VMResourceGroup> `
+            -VirtualMachineName <SourceWorkloadVMName> `
+            -DiskResourceGroups <DiskResourceGroupsName>,<DiskResourceGroupsName> `
+            -SnapshotResourceGroup <SnapshotResourceGroupName> `
+            -UserAssignedServiceIdentityId <UserIdentityPrincipalId>
+```
+
+Run the following to get more help on the parameters
+```powershell
+Get-Help SetWorkloadSnapshotRestorePermissions.ps1
+```
