@@ -1,5 +1,5 @@
 def assignRoleOnResourceGroup(PrincipalId, ResourceGroup, RoleName):
-    output = os.system("az role assignment list -g {} --assignee {} --role {} -o tsv --only-show-errors > roleGet.txt".format(ResourceGroup, PrincipalId, RoleName)) 
+    output = os.system("az role assignment list -g {} --assignee {} --role {} -o tsv --only-show-errors > roleGet.txt".format(ResourceGroup, PrincipalId, "\"" + RoleName + "\"")) 
 
     #Error handling
     if output != 0:
@@ -14,16 +14,16 @@ def assignRoleOnResourceGroup(PrincipalId, ResourceGroup, RoleName):
         print(bcolors.OKBLUE + "Already assigned " + RoleName + " role on resource group " + ResourceGroup + " to "+ PrincipalId + bcolors.ENDC)
     else:
         print(bcolors.OKBLUE + "Assigning role " + RoleName + " to " + PrincipalId + " on resource group " + ResourceGroup + bcolors.ENDC)
-        output = os.system("az role assignment create -g {} --assignee {} --role {} -o tsv --only-show-errors".format(ResourceGroup, PrincipalId, RoleName))
+        output = os.system("az role assignment create -g {} --assignee {} --role {} -o tsv --only-show-errors".format(ResourceGroup, PrincipalId, "\"" + RoleName + "\""))
 
         if output != 0:
             print(bcolors.OKBLUE + "Exception caught while assigning role" + bcolors.ENDC)
             sys.exit()
         else:
-            print(bcolors.OKBLUE + "Assigned " + RoleName + " role on resource group " + ResourceGroup + " to " + PrincipalId + "successfully." + bcolors.ENDC)    
+            print(bcolors.OKBLUE + "Assigned " + RoleName + " role on resource group " + ResourceGroup + " to " + PrincipalId + " successfully." + bcolors.ENDC)    
 
-def assignRoleOnScope(PrincipalId, ResourceGroup, RoleName, Scope):
-    output = os.system("az role assignment list -g {} --assignee {} --role {} --scope {} -o tsv --only-show-errors > roleGetScope.txt".format(ResourceGroup, PrincipalId, RoleName, Scope)) 
+def assignRoleOnScope(PrincipalId, RoleName, Scope):
+    output = os.system("az role assignment list --assignee {} --role {} --scope {} -o tsv --only-show-errors > roleGetScope.txt".format( PrincipalId, "\"" + RoleName + "\"", Scope)) 
 
     #Error handling
     if output != 0:
@@ -35,16 +35,16 @@ def assignRoleOnScope(PrincipalId, ResourceGroup, RoleName, Scope):
     role = [line[:-1] for line in fileinput.input(files='roleGetScope.txt')]
 
     if len(role):
-        print(bcolors.OKBLUE + "Already assigned " + RoleName + " role on scope " + Scope + " in resource group " + ResourceGroup + " to "+ PrincipalId + bcolors.ENDC)
+        print(bcolors.OKBLUE + "Already assigned " + RoleName + " role on scope " + Scope + " to " + PrincipalId + bcolors.ENDC)
     else:
-        print(bcolors.OKBLUE + "Assigning role " + RoleName + " to " + PrincipalId + " on scope " + Scope + " in resource group " + ResourceGroup + bcolors.ENDC)
-        output = os.system("az role assignment create -g {} --assignee {} --role {} --scope {} -o tsv --only-show-errors".format(ResourceGroup, PrincipalId, RoleName, Scope))
+        print(bcolors.OKBLUE + "Assigning role " + RoleName + " to " + PrincipalId + " on scope " + Scope + bcolors.ENDC)
+        output = os.system("az role assignment create --assignee {} --role {} --scope {} -o tsv --only-show-errors".format(PrincipalId, "\"" + RoleName + "\"", Scope))
 
         if output != 0:
             print(bcolors.OKBLUE + "Exception caught while assigning role" + bcolors.ENDC)
             sys.exit()
         else:
-            print(bcolors.OKBLUE + "Assigned " + RoleName + " role on scope " + Scope + " in resource group " + ResourceGroup + " to " + PrincipalId + "successfully." + bcolors.ENDC)
+            print(bcolors.OKBLUE + "Assigned " + RoleName + " role on scope " + Scope + " to " + PrincipalId + " successfully." + bcolors.ENDC)
 
 class bcolors:
     HEADER = '\033[95m'
@@ -97,7 +97,9 @@ else:
 if (args.service_principal_id is not None) and (args.service_principal_id != ""):
     service_principal_id = args.service_principal_id
 else:
-    output = os.system("az vm identity show -n {} -g {} --subscription {} -o tsv --only-show-errors > identityShow.txt".format(vm_name, vm_resource_group, subscription)) 
+    output = os.system("az vm identity show -n {} -g {} --subscription {} -o tsv --only-show-errors > identityShow.txt".format(vm_name, vm_resource_group, subscription))
+
+    print(bcolors.OKGREEN + "Successfully listed VM identity ... " + bcolors.ENDC) 
     identity = [line[:-1] for line in fileinput.input(files='identityShow.txt')]
 
     if len(identity) == 0:
@@ -105,7 +107,7 @@ else:
         output = os.system("az vm identity show -n {} -g {} --subscription {} -o tsv --only-show-errors > identityShow.txt".format(vm_name, vm_resource_group, subscription)) 
         identity = [line[:-1] for line in fileinput.input(files='identityShow.txt')]
     
-    service_principal_id = (identity[1].split('"'))[3]
+    service_principal_id = identity[0].split("\t")[0] # (identity[1].split('"'))[3]
 
 print(bcolors.OKGREEN + "Assigning permissions to " + service_principal_id + bcolors.ENDC)
 
@@ -122,8 +124,8 @@ assignRoleOnResourceGroup(service_principal_id, snapshot_resource_group, diskSna
 
 # Assign permission on virtual machine
 output = os.system("az vm show -n {} -g {} --subscription {} --query id  -o tsv --only-show-errors > vmId.txt".format(vm_name, vm_resource_group, subscription))
-vm_id = [line[:-1] for line in fileinput.input(files='vmId.txt')][0][1:-1]
+vm_id = [line[:-1] for line in fileinput.input(files='vmId.txt')][0] #[1:-1]
 
-assignRoleOnScope(service_principal_id, vm_resource_group, vmContributorRoleName, vm_id)
+assignRoleOnScope(service_principal_id, vmContributorRoleName, vm_id)
 
 print(bcolors.OKGREEN + "Script Execution completed" + bcolors.ENDC)

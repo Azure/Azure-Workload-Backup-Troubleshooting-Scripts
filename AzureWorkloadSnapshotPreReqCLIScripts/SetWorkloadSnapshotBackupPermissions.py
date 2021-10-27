@@ -1,9 +1,9 @@
 def assignRoleOnResourceGroup(PrincipalId, ResourceGroup, RoleName):
-    output = os.system("az role assignment list -g {} --assignee {} --role {} -o tsv --only-show-errors > roleGet.txt".format(ResourceGroup, PrincipalId, RoleName)) 
+    output = os.system("az role assignment list -g {} --assignee {} --role {} -o tsv --only-show-errors > roleGet.txt".format(ResourceGroup, PrincipalId, "\"" + RoleName + "\"")) 
 
     #Error handling
     if output != 0:
-        print(bcolors.FAIL + "Script failed with unexpected error ... " + bcolors.ENDC)
+        print(bcolors.FAIL + "Script failed with unexpected error ..." + bcolors.ENDC)
         sys.exit()
 
     print(bcolors.OKGREEN + "Role Assignment fetched..." + bcolors.ENDC)
@@ -14,7 +14,7 @@ def assignRoleOnResourceGroup(PrincipalId, ResourceGroup, RoleName):
         print(bcolors.OKBLUE + "Already assigned " + RoleName + " role on resource group " + ResourceGroup + " to "+ PrincipalId + bcolors.ENDC)
     else:
         print(bcolors.OKBLUE + "Assigning role " + RoleName + " to " + PrincipalId + " on resource group " + ResourceGroup + bcolors.ENDC)
-        output = os.system("az role assignment create -g {} --assignee {} --role {} -o tsv --only-show-errors".format(ResourceGroup, PrincipalId, RoleName))
+        output = os.system("az role assignment create -g {} --assignee {} --role {} -o tsv --only-show-errors".format(ResourceGroup, PrincipalId, "\"" + RoleName + "\""))
 
         if output != 0:
             print(bcolors.OKBLUE + "Exception caught while assigning role" + bcolors.ENDC)
@@ -74,6 +74,8 @@ if (args.service_principal_id is not None) and (args.service_principal_id != "")
     service_principal_id = args.service_principal_id
 else:
     output = os.system("az vm identity show -n {} -g {} --subscription {} -o tsv --only-show-errors > identityShow.txt".format(vm_name, vm_resource_group, subscription)) 
+
+    print(bcolors.OKGREEN + "Successfully listed VM identity ... " + bcolors.ENDC)
     identity = [line[:-1] for line in fileinput.input(files='identityShow.txt')]
 
     if len(identity) == 0:
@@ -81,7 +83,7 @@ else:
         output = os.system("az vm identity show -n {} -g {} --subscription {} -o tsv --only-show-errors > identityShow.txt".format(vm_name, vm_resource_group, subscription)) 
         identity = [line[:-1] for line in fileinput.input(files='identityShow.txt')]
     
-    service_principal_id = (identity[1].split('"'))[3]
+    service_principal_id = identity[0].split("\t")[0]  # (identity[1].split('"'))[3]
 
 print(bcolors.OKGREEN + "Assigning permissions to " + service_principal_id + bcolors.ENDC)
 
