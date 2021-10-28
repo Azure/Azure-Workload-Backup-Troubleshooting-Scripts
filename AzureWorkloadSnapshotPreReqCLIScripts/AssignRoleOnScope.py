@@ -1,3 +1,7 @@
+import os
+import fileinput
+import sys
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -8,10 +12,6 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
-
-import os
-import fileinput
-import sys
 
 #Enabling colors in the command prompt
 os.system("color")
@@ -34,7 +34,7 @@ if output != 0:
     print(bcolors.FAIL + "Script failed with unexpected error ... " + bcolors.ENDC)
     sys.exit()
 
-print(bcolors.OKGREEN + "Role Assignment fetched..." + bcolors.ENDC)
+print(bcolors.OKGREEN + "Fetched role " + RoleName + " assigned to " + PrincipalId + " on Scope " + Scope + bcolors.ENDC)
 
 role = [line[:-1] for line in fileinput.input(files='roleGetScope.txt')]
 
@@ -45,7 +45,7 @@ else:
     output = os.system("az role assignment create --assignee {} --role {} --scope {} -o tsv --only-show-errors".format(PrincipalId, RoleName, Scope))
 
     if output != 0:
-        print(bcolors.OKBLUE + "Exception caught while assigning role" + bcolors.ENDC)
+        print(bcolors.FAIL + "Exception caught while assigning role" + bcolors.ENDC)
         sys.exit()
     else:
         print(bcolors.OKBLUE + "Assigned " + RoleName + " role on scope " + Scope + " to " + PrincipalId + "successfully." + bcolors.ENDC)
