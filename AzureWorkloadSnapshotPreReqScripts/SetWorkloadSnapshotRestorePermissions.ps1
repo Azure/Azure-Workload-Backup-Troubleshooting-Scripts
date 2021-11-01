@@ -53,10 +53,10 @@
 
 .EXAMPLE
     C:\PS> .\SetWorkloadSnapshotRestorePermissions.ps1 -Subscription <SubscriptionId> `
-            -VirtualMachineResourceGroup <VMResourceGroup> `
-            -VirtualMachineName <VMName> `
-            -DiskResourceGroups <DiskResourceGroupsName>,<DiskResourceGroupsName> `
-            -SnapshotResourceGroup <SnapshotResourceGroupName>
+                -VirtualMachineResourceGroup <VMResourceGroup> `
+                -VirtualMachineName @(<SourceWorkloadVMName1>,<SourceWorkloadVMName2>) `
+                -DiskResourceGroups @(<DiskResourceGroupsName1>,<DiskResourceGroupsName2>) `
+                -SnapshotResourceGroup <SnapshotResourceGroupName>
 
 .NOTES
     Author: Shashwat Trivedi (shtriv@microsoft.com)
