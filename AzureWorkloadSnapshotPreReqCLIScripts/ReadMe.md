@@ -20,7 +20,7 @@ Azure virtual machine containing the target workload requires the following role
 
 Resource (Access control)  |Role   
 ------ | ------
-|Snapshot RG where the snapshots would be restored   |Disk snapshot contributor  |
+|Resource group (RG) in which the snapshots taken would be stored (specified at the time of creating backup policy)   |Disk snapshot contributor  |
 |Target Disk RG where all disks will be created during restore  |Disk Restore operator   |
 |Source Disk RG (RG where all existing disks of target VM are present)   |Disk Restore operator   |
 |Target VM     |Virtual Machine Contributor    |
@@ -31,7 +31,7 @@ Azure Backup Management Service requires the following roles
 
 Resource (Access control)  |Role
 ------ | ------
-|Snapshot RG where the snapshots would be restored   |Disk snapshot contributor  |
+|Resource group (RG) in which the snapshots taken would be stored (specified at the time of creating backup policy)   |Disk snapshot contributor  |
 
 ## Requirements
 
