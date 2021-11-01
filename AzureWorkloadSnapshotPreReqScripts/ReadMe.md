@@ -9,8 +9,6 @@
 
 Azure virtual machine containing the source workload requires the following roles 
 
-
-
 Resource (Access control)  |Role   
 ------ | ------
 Disk(s) attached to the source VM (or the Disk RG), that are getting snapshotted |Disk backup reader |
@@ -26,6 +24,14 @@ Resource (Access control)  |Role
 |Target Disk RG where all disks will be created during restore  |Disk Restore operator   |
 |Source Disk RG (RG where all existing disks of target VM are present)   |Disk Restore operator   |
 |Target VM     |Virtual Machine Contributor    |
+
++ For Snapshot deletion after retention period
+
+Azure Backup Management Service requires the following roles
+
+Resource (Access control)  |Role
+------ | ------
+|Snapshot RG where the snapshots would be restored   |Disk snapshot contributor  |
 
 ## Requirements
 
