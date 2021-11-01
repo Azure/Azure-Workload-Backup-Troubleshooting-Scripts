@@ -72,8 +72,8 @@ $Subscription,
 $VirtualMachineResourceGroup,
 
 [parameter(Position= 2 ,Mandatory= $true)]
-[string]
-$VirtualMachineName,
+[string[]]
+$VirtualMachineNames,
 
 [parameter(Position= 3 ,Mandatory= $true)]
 [string[]]
@@ -89,6 +89,7 @@ $UserAssignedServiceIdentityId = $null)
 
 # Include helper functions
 . ./AssignRoles.ps1
+. ./AssignIdentity.ps1
 
 Write-Verbose "Connecting to Azure account"
 Connect-AzAccount
@@ -100,51 +101,25 @@ $diskBackupReaderRoleName = "Disk Backup Reader"
 $diskSnapshotContributorRoleName = "Disk Snapshot Contributor"
 $backupServicePrincipalId = "f40e18f0-6544-45c2-9d24-639a8bb3b41a"
 
-$principalId = $null
+Write-Host "Assigning identity to $VirtualMachineNames" -ForegroundColor Blue
+$principalIds = AssignIdentityToVMs -UserAssignedServiceIdentityId $UserAssignedServiceIdentityId -VirtualMachineResourceGroup $VirtualMachineResourceGroup -VirtualMachineNames $VirtualMachineNames
+Write-Host "Assigning permissions to $principalIds" -ForegroundColor Blue
 
-if ( [string]::IsNullOrEmpty($UserAssignedServiceIdentityId) -eq $false)
+foreach ($principalId in $principalIds)
 {
-    Write-Verbose "Using user assigned service identity $UserAssignedServiceIdentityId"
-    $principalId = $UserAssignedServiceIdentityId
-}
-else
-{
-    $vm = Get-AzVM -ResourceGroupName "$VirtualMachineResourceGroup" -Name "$VirtualMachineName"
-
-    if ( [string]::IsNullOrEmpty($vm.Identity.PrincipalId) -eq $false)
+    # Assign permissions for disk resource groups
+    foreach ($DiskResourceGroup in $DiskResourceGroups)
     {
-        Write-Verbose "System assigned identity enabled on virtual machine $VirtualMachineName"
-        $principalId = $vm.Identity.PrincipalId
-    }
-    else
-    {
-        Write-Host "Enabling system assigned identity on virtual machine $VirtualMachineName"
-
-        Update-AzVM -ResourceGroupName "$VirtualMachineResourceGroup" -VM $vm -IdentityType SystemAssigned
-        Start-Sleep 10
-
-        $vm = Get-AzVM -ResourceGroupName "$VirtualMachineResourceGroup" -Name "$VirtualMachineName"
-
-        Write-Host "Enabled system assigned identity on virtual machine $VirtualMachineName"
-
-        $principalId = $vm.Identity.PrincipalId
+        AssignRoleOnResourceGroup -PrincipalId $principalId -ResourceGroup $DiskResourceGroup -RoleName $diskBackupReaderRoleName
     }
 
-    Write-Verbose "Using virtual machine system identity $principalId"
+    # Assign permissions for snapshot resource groups to VM Identity
+    AssignRoleOnResourceGroup -PrincipalId $principalId -ResourceGroup $SnapshotResourceGroup -RoleName $diskSnapshotContributorRoleName
 }
 
-Write-Host "Assigning permissions to $principalId"
-
-# Assign permissions for disk resource groups
-foreach ($DiskResourceGroup in $DiskResourceGroups)
-{
-    AssignRoleOnResourceGroup -PrincipalId $principalId -ResourceGroup $DiskResourceGroup -RoleName $diskBackupReaderRoleName
-}
-
-# Assign permissions for snapshot resource groups to VM Identity
-AssignRoleOnResourceGroup -PrincipalId $principalId -ResourceGroup $SnapshotResourceGroup -RoleName $diskSnapshotContributorRoleName
+Write-Host "Assigning permissions to Azure Backup Management Service" -ForegroundColor Blue
 
 # Assign permissions for snapshot resource groups to Backup Management Service
 AssignRoleOnResourceGroup -PrincipalId $backupServicePrincipalId -ResourceGroup $SnapshotResourceGroup -RoleName $diskSnapshotContributorRoleName
 
-Write-Host "Script Execution completed"
+Write-Host "Script Execution completed" -ForegroundColor Green

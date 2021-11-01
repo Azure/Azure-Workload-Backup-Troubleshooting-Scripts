@@ -3,8 +3,6 @@
 > Contains the scripts for setting up the permissions for virtual machine identity on required resources
 > and resource group for snapshot backups dones by Azure workload backup extensions.
 
-
-
 + For Backup
 
 Azure virtual machine containing the source workload requires the following roles 
@@ -49,8 +47,8 @@ Before the snapshot backup, use the following script to give the required roles 
 ```powershell
 .\SetWorkloadSnapshotBackupPermissions.ps1 -Subscription <SubscriptionId> `
             -VirtualMachineResourceGroup <VMResourceGroup> `
-            -VirtualMachineName <SourceWorkloadVMName> `
-            -DiskResourceGroups <DiskResourceGroupsName>,<DiskResourceGroupsName> `
+            -VirtualMachineName @(<SourceWorkloadVMName1>,<SourceWorkloadVMName2>) `
+            -DiskResourceGroups @(<DiskResourceGroupsName1>,<DiskResourceGroupsName2>) `
             -SnapshotResourceGroup <SnapshotResourceGroupName>
 ```
 
@@ -59,10 +57,10 @@ Before the snapshot backup, use the following script to give the required roles 
 ```powershell
 .\SetWorkloadSnapshotBackupPermissions.ps1 -Subscription <SubscriptionId> `
             -VirtualMachineResourceGroup <VMResourceGroup> `
-            -VirtualMachineName <SourceWorkloadVMName> `
-            -DiskResourceGroups <DiskResourceGroupsName>,<DiskResourceGroupsName> `
+            -VirtualMachineName @(<SourceWorkloadVMName1>,<SourceWorkloadVMName2>) `
+            -DiskResourceGroups @(<DiskResourceGroupsName1>,<DiskResourceGroupsName2>) `
             -SnapshotResourceGroup <SnapshotResourceGroupName> `
-            -UserAssignedServiceIdentityId <UserIdentityPrincipalId>
+            -UserAssignedServiceIdentityId <UserIdentityPrincipalARMId>
 ```
 
 Run the following to get more help on the parameters
@@ -77,8 +75,8 @@ Before the snapshot disk restore, use the following script to give the required 
 ```powershell
 .\SetWorkloadSnapshotRestorePermissions.ps1 -Subscription <SubscriptionId> `
             -VirtualMachineResourceGroup <VMResourceGroup> `
-            -VirtualMachineName <SourceWorkloadVMName> `
-            -DiskResourceGroups <DiskResourceGroupsName>,<DiskResourceGroupsName> `
+            -VirtualMachineName @(<SourceWorkloadVMName1>,<SourceWorkloadVMName2>) `
+            -DiskResourceGroups @(<DiskResourceGroupsName1>,<DiskResourceGroupsName2>) `
             -SnapshotResourceGroup <SnapshotResourceGroupName>
 ```
 
@@ -87,10 +85,10 @@ Before the snapshot backup, use the following script to give the required roles 
 ```powershell
 .\SetWorkloadSnapshotRestorePermissions.ps1 -Subscription <SubscriptionId> `
             -VirtualMachineResourceGroup <VMResourceGroup> `
-            -VirtualMachineName <SourceWorkloadVMName> `
-            -DiskResourceGroups <DiskResourceGroupsName>,<DiskResourceGroupsName> `
+            -VirtualMachineName @(<SourceWorkloadVMName1>,<SourceWorkloadVMName2>) `
+            -DiskResourceGroups @(<DiskResourceGroupsName1>,<DiskResourceGroupsName2>) `
             -SnapshotResourceGroup <SnapshotResourceGroupName> `
-            -UserAssignedServiceIdentityId <UserIdentityPrincipalId>
+            -UserAssignedServiceIdentityId <UserIdentityPrincipalARMId>
 ```
 
 Run the following to get more help on the parameters
