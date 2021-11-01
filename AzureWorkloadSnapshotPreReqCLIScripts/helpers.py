@@ -33,6 +33,7 @@ def assignRoleOnResourceGroup(PrincipalId, ResourceGroup, RoleName):
     #Error handling
     if output != 0:
         print(bcolors.FAIL + "Script failed with unexpected error ... " + bcolors.ENDC)
+        print(bcolors.FAIL + "Please re-run the script after some time." + bcolors.ENDC)
         sys.exit()
 
     print(bcolors.OKGREEN + "Role assignment with role  " + RoleName + " for " + PrincipalId + " on resource group " + ResourceGroup + " fetched successfully " + bcolors.ENDC)
@@ -47,6 +48,7 @@ def assignRoleOnResourceGroup(PrincipalId, ResourceGroup, RoleName):
 
         if output != 0:
             print(bcolors.OKBLUE + "Exception caught while assigning role" + bcolors.ENDC)
+            print(bcolors.FAIL + "Please re-run the script after some time." + bcolors.ENDC)
             sys.exit()
         else:
             print(bcolors.OKBLUE + "Assigned " + RoleName + " role on resource group " + ResourceGroup + " to " + PrincipalId + " successfully." + bcolors.ENDC)    
@@ -59,6 +61,7 @@ def assignRoleOnScope(PrincipalId, RoleName, Scope):
     #Error handling
     if output != 0:
         print(bcolors.FAIL + "Script failed with unexpected error ... " + bcolors.ENDC)
+        print(bcolors.FAIL + "Please re-run the script after some time." + bcolors.ENDC)
         sys.exit()
 
     print(bcolors.OKGREEN + "Role assignment with role" + RoleName + " for " + PrincipalId + " on scope " + Scope + " fetched successfully " + bcolors.ENDC)
@@ -73,6 +76,7 @@ def assignRoleOnScope(PrincipalId, RoleName, Scope):
 
         if output != 0:
             print(bcolors.FAIL + "Exception caught while assigning role" + bcolors.ENDC)
+            print(bcolors.FAIL + "Please re-run the script after some time." + bcolors.ENDC)
             sys.exit()
         else:
             print(bcolors.OKBLUE + "Assigned " + RoleName + " role on scope " + Scope + " to " + PrincipalId + " successfully." + bcolors.ENDC)

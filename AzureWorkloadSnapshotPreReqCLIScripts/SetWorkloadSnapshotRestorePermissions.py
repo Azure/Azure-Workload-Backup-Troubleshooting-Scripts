@@ -25,6 +25,7 @@ import os
 import fileinput
 import sys
 import argparse
+import time
 from helpers import *
 
 #Enabling colors in the command prompt
@@ -49,6 +50,10 @@ vm_name = args.vm_name
 disk_resource_groups = args.disk_resource_groups
 snapshot_resource_group = args.snapshot_resource_group
 
+diskSnapshotContributorRoleName = "Disk Snapshot Contributor"
+vmContributorRoleName = "Virtual Machine Contributor"
+diskRestoreOperatorRoleName = "Disk Restore operator"
+
 output = os.system("az login -o tsv --only-show-errors > login.txt")
 output = os.system("az account set -s {} -o tsv --only-show-errors > context.txt".format(subscription))
 
@@ -72,9 +77,11 @@ else:
 
         if output != 0:
             print(bcolors.FAIL + "Script failed with unexpected error while assigning VM identity ..." + bcolors.ENDC)
+            print(bcolors.FAIL + "Please re-run the script after some time." + bcolors.ENDC)
             sys.exit()
 
         print(bcolors.OKGREEN + "Successfully assigned identity to VM " + vm_name + bcolors.ENDC)
+        time.sleep(10)
         
         output = os.system("az vm identity show -n {} -g {} --subscription {} -o tsv --only-show-errors > identityShow.txt".format(vm_name, vm_resource_group, subscription)) 
         identity = [line[:-1] for line in fileinput.input(files='identityShow.txt')]
@@ -82,10 +89,6 @@ else:
     service_principal_id = identity[0].split("\t")[0] # (identity[1].split('"'))[3]
 
 print(bcolors.OKGREEN + "Assigning permissions to " + service_principal_id + bcolors.ENDC)
-
-diskSnapshotContributorRoleName = "Disk Snapshot Contributor"
-vmContributorRoleName = "Virtual Machine Contributor"
-diskRestoreOperatorRoleName = "Disk Restore operator"
 
 # Assign permissions for disk resource groups
 for disk_resource_group in disk_resource_groups:

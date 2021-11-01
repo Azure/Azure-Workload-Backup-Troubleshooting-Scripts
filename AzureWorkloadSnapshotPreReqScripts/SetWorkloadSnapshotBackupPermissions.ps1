@@ -96,6 +96,10 @@ Connect-AzAccount
 Set-AzContext -SubscriptionId $Subscription
 Write-Verbose "Azure context set for subscription $Subscription"
 
+$diskBackupReaderRoleName = "Disk Backup Reader"
+$diskSnapshotContributorRoleName = "Disk Snapshot Contributor"
+$backupServicePrincipalId = "f40e18f0-6544-45c2-9d24-639a8bb3b41a"
+
 $principalId = $null
 
 if ( [string]::IsNullOrEmpty($UserAssignedServiceIdentityId) -eq $false)
@@ -131,16 +135,16 @@ else
 
 Write-Host "Assigning permissions to $principalId"
 
-$diskBackupReaderRoleName = "Disk Backup Reader"
-$diskSnapshotContributorRoleName = "Disk Snapshot Contributor"
-
 # Assign permissions for disk resource groups
 foreach ($DiskResourceGroup in $DiskResourceGroups)
 {
     AssignRoleOnResourceGroup -PrincipalId $principalId -ResourceGroup $DiskResourceGroup -RoleName $diskBackupReaderRoleName
 }
 
-# Assign permissions for snapshot resource groups
+# Assign permissions for snapshot resource groups to VM Identity
 AssignRoleOnResourceGroup -PrincipalId $principalId -ResourceGroup $SnapshotResourceGroup -RoleName $diskSnapshotContributorRoleName
+
+# Assign permissions for snapshot resource groups to Backup Management Service
+AssignRoleOnResourceGroup -PrincipalId $backupServicePrincipalId -ResourceGroup $SnapshotResourceGroup -RoleName $diskSnapshotContributorRoleName
 
 Write-Host "Script Execution completed"

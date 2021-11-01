@@ -96,6 +96,10 @@ Connect-AzAccount
 Set-AzContext -SubscriptionId $Subscription
 Write-Verbose "Azure context set for subscription $Subscription"
 
+$diskSnapshotContributorRoleName = "Disk Snapshot Contributor"
+$vmContributorRoleName = "Virtual Machine Contributor"
+$diskRestoreOperatorRoleName = "Disk Restore operator"
+
 $principalId = $null
 
 if ( [string]::IsNullOrEmpty($UserAssignedServiceIdentityId) -eq $false)
@@ -130,11 +134,6 @@ else
 }
 
 Write-Host "Assigning permissions to $principalId"
-
-$diskSnapshotContributorRoleName = "Disk Snapshot Contributor"
-$vmContributorRoleName = "Virtual Machine Contributor"
-$diskRestoreOperatorRoleName = "Disk Restore operator"
-
 
 # Assign permissions for disk resource groups
 foreach ($DiskResourceGroup in $DiskResourceGroups)

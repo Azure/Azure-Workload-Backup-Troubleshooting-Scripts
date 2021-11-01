@@ -25,6 +25,7 @@ import os
 import fileinput
 import sys
 import argparse
+import time
 from helpers import *
 
 #Enabling colors in the command prompt
@@ -48,6 +49,10 @@ vm_resource_group = args.vm_resource_group
 vm_name = args.vm_name
 disk_resource_groups = args.disk_resource_groups
 snapshot_resource_group = args.snapshot_resource_group
+
+diskBackupReaderRoleName = "Disk Backup Reader"
+diskSnapshotContributorRoleName = "Disk Snapshot Contributor"
+backup_service_principalId = "f40e18f0-6544-45c2-9d24-639a8bb3b41a"
 
 output = os.system("az login -o tsv --only-show-errors > login.txt")
 output = os.system("az account set -s {} -o tsv --only-show-errors > context.txt".format(subscription))
@@ -75,6 +80,7 @@ else:
             sys.exit()
 
         print(bcolors.OKGREEN + "Successfully assigned identity to VM " + vm_name + bcolors.ENDC)
+        time.sleep(10)
 
         output = os.system("az vm identity show -n {} -g {} --subscription {} -o tsv --only-show-errors > identityShow.txt".format(vm_name, vm_resource_group, subscription)) 
         identity = [line[:-1] for line in fileinput.input(files='identityShow.txt')]
@@ -83,14 +89,14 @@ else:
 
 print(bcolors.OKGREEN + "Assigning permissions to " + service_principal_id + bcolors.ENDC)
 
-diskBackupReaderRoleName = "Disk Backup Reader"
-diskSnapshotContributorRoleName = "Disk Snapshot Contributor"
-
 # Assign permissions for disk resource groups
 for disk_resource_group in disk_resource_groups:
     assignRoleOnResourceGroup(service_principal_id, disk_resource_group, diskBackupReaderRoleName)        
 
-# Assign permissions for snapshot resource groups
-assignRoleOnResourceGroup(service_principal_id, snapshot_resource_group, diskSnapshotContributorRoleName)        
+# Assign permissions for snapshot resource groups to VM Identity
+assignRoleOnResourceGroup(service_principal_id, snapshot_resource_group, diskSnapshotContributorRoleName)
+
+# Assign permissions for snapshot resource groups to Backup Management Service
+assignRoleOnResourceGroup(backup_service_principalId, snapshot_resource_group, diskSnapshotContributorRoleName)        
 
 print(bcolors.OKGREEN + "Script Execution completed" + bcolors.ENDC)
