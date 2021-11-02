@@ -69,7 +69,7 @@ function AssignRoleOnResourceGroup
     {
         try
         {
-            Write-Host "Assigning role $RoleName to $PrincipalId on resource group $ResourceGroup"
+            Write-Host "Assigning role $RoleName to $PrincipalId on resource group $ResourceGroup" -ForegroundColor Blue
 
             New-AzRoleAssignment `
                 -ObjectId $PrincipalId `
@@ -78,13 +78,13 @@ function AssignRoleOnResourceGroup
         }
         catch
         {
-            Write-Error "Exception caught while assigning role"
-            Write-Error $Error[0].Exception
+            Write-Error "Exception caught while assigning role" -ForegroundColor Red
+            Write-Error $Error[0].Exception -ForegroundColor Red
         }
     }
     else
     {
-        Write-Host("Already assigned $RoleName role on resource group $ResourceGroup to $PrincipalId" )
+        Write-Host("Already assigned $RoleName role on resource group $ResourceGroup to $PrincipalId" ) -ForegroundColor Green
     }
 }
 
@@ -155,7 +155,7 @@ function AssignRoleOnResource
     {
         try
         {
-            Write-Host "Assigning role $RoleName to $PrincipalId on $ResourceName in $ResourceGroup"
+            Write-Host "Assigning role $RoleName to $PrincipalId on $ResourceName in $ResourceGroup" -ForegroundColor Blue
 
             New-AzRoleAssignment `
                 -ObjectId $PrincipalId `
@@ -166,12 +166,12 @@ function AssignRoleOnResource
         }
         catch
         {
-            Write-Error "Exception caught while assigning role"
-            Write-Error $Error[0].Exception
+            Write-Error "Exception caught while assigning role" -ForegroundColor Red
+            Write-Error $Error[0].Exception -ForegroundColor Red
         }
     }
     else
     {
-        Write-Host("Already assigned $RoleName role on $ResourceName in $ResourceGroup to $PrincipalId" )
+        Write-Host("Already assigned $RoleName role on $ResourceName in $ResourceGroup to $PrincipalId" )  -ForegroundColor Green
     }
 }

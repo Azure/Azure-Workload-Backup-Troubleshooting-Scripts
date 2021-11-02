@@ -53,10 +53,10 @@
 
 .EXAMPLE
     C:\PS> .\SetWorkloadSnapshotRestorePermissions.ps1 -Subscription <SubscriptionId> `
-            -VirtualMachineResourceGroup <VMResourceGroup> `
-            -VirtualMachineName <VMName> `
-            -DiskResourceGroups <DiskResourceGroupsName>,<DiskResourceGroupsName> `
-            -SnapshotResourceGroup <SnapshotResourceGroupName>
+                -VirtualMachineResourceGroup <VMResourceGroup> `
+                -VirtualMachineName @(<SourceWorkloadVMName1>,<SourceWorkloadVMName2>) `
+                -DiskResourceGroups @(<DiskResourceGroupsName1>,<DiskResourceGroupsName2>) `
+                -SnapshotResourceGroup <SnapshotResourceGroupName>
 
 .NOTES
     Author: Shashwat Trivedi (shtriv@microsoft.com)
@@ -72,8 +72,8 @@ $Subscription,
 $VirtualMachineResourceGroup,
 
 [parameter(Position= 2 ,Mandatory= $true)]
-[string]
-$VirtualMachineName,
+[string[]]
+$VirtualMachineNames,
 
 [parameter(Position= 3 ,Mandatory= $true)]
 [string[]]
@@ -89,6 +89,7 @@ $UserAssignedServiceIdentityId = $null)
 
 # Include helper functions
 . ./AssignRoles.ps1
+. ./AssignIdentity.ps1
 
 Write-Verbose "Connecting to Azure account"
 Connect-AzAccount
@@ -96,56 +97,32 @@ Connect-AzAccount
 Set-AzContext -SubscriptionId $Subscription
 Write-Verbose "Azure context set for subscription $Subscription"
 
-$principalId = $null
-
-if ( [string]::IsNullOrEmpty($UserAssignedServiceIdentityId) -eq $false)
-{
-    Write-Verbose "Using user assigned service identity $UserAssignedServiceIdentityId"
-    $principalId = $UserAssignedServiceIdentityId
-}
-else
-{
-    $vm = Get-AzVM -ResourceGroupName "$VirtualMachineResourceGroup" -Name "$VirtualMachineName"
-
-    if ( [string]::IsNullOrEmpty($vm.Identity.PrincipalId) -eq $false)
-    {
-        Write-Verbose "System assigned identity enabled on virtual machine $VirtualMachineName"
-        $principalId = $vm.Identity.PrincipalId
-    }
-    else
-    {
-        Write-Host "Enabling system assigned identity on virtual machine $VirtualMachineName"
-
-        Update-AzVM -ResourceGroupName "$VirtualMachineResourceGroup" -VM $vm -IdentityType SystemAssigned
-        Start-Sleep 10
-
-        $vm = Get-AzVM -ResourceGroupName "$VirtualMachineResourceGroup" -Name "$VirtualMachineName"
-
-        Write-Host "Enabled system assigned identity on virtual machine $VirtualMachineName"
-
-        $principalId = $vm.Identity.PrincipalId
-    }
-
-    Write-Verbose "Using virtual machine system identity $principalId"
-}
-
-Write-Host "Assigning permissions to $principalId"
-
 $diskSnapshotContributorRoleName = "Disk Snapshot Contributor"
 $vmContributorRoleName = "Virtual Machine Contributor"
 $diskRestoreOperatorRoleName = "Disk Restore operator"
 
+Write-Host "Assigning identity to $VirtualMachineNames" -ForegroundColor Blue
+$principalIds = AssignIdentityToVMs -UserAssignedServiceIdentityId $UserAssignedServiceIdentityId -VirtualMachineResourceGroup $VirtualMachineResourceGroup -VirtualMachineNames $VirtualMachineNames
+Write-Host "Assigning permissions to $principalIds" -ForegroundColor Blue
 
-# Assign permissions for disk resource groups
-foreach ($DiskResourceGroup in $DiskResourceGroups)
+foreach ($principalId in $principalIds)
 {
-    AssignRoleOnResourceGroup -PrincipalId $principalId -ResourceGroup $DiskResourceGroup -RoleName $diskRestoreOperatorRoleName
+    # Assign permissions for disk resource groups
+    foreach ($DiskResourceGroup in $DiskResourceGroups)
+    {
+        AssignRoleOnResourceGroup -PrincipalId $principalId -ResourceGroup $DiskResourceGroup -RoleName $diskRestoreOperatorRoleName
+    }
+
+    # Assign permissions for snapshot resource groups
+    AssignRoleOnResourceGroup -PrincipalId $principalId -ResourceGroup $SnapshotResourceGroup -RoleName $diskSnapshotContributorRoleName
 }
 
-# Assign permissions for snapshot resource groups
-AssignRoleOnResourceGroup -PrincipalId $principalId -ResourceGroup $SnapshotResourceGroup -RoleName $diskSnapshotContributorRoleName
+foreach ($VirtualMachineName in $VirtualMachineNames)
+{
+    $vm = Get-AzVM -ResourceGroupName "$VirtualMachineResourceGroup" -Name "$VirtualMachineName"
 
-# Assign permission on virtual machine
-AssignRoleOnResource -PrincipalId $principalId -ResourceGroup $VirtualMachineResourceGroup -ResourceName $VirtualMachineName -ResourceType "Microsoft.Compute/virtualMachines" -RoleName $vmContributorRoleName
+    # Assign permission on virtual machine
+    AssignRoleOnResource -PrincipalId $vm.Identity.PrincipalId -ResourceGroup $VirtualMachineResourceGroup -ResourceName $VirtualMachineName -ResourceType "Microsoft.Compute/virtualMachines" -RoleName $vmContributorRoleName
+}
 
-Write-Host "Script Execution completed"
+Write-Host "Script Execution completed" -ForegroundColor Green

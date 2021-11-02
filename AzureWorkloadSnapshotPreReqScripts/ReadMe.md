@@ -3,13 +3,9 @@
 > Contains the scripts for setting up the permissions for virtual machine identity on required resources
 > and resource group for snapshot backups dones by Azure workload backup extensions.
 
-
-
 + For Backup
 
 Azure virtual machine containing the source workload requires the following roles 
-
-
 
 Resource (Access control)  |Role   
 ------ | ------
@@ -22,10 +18,18 @@ Azure virtual machine containing the target workload requires the following role
 
 Resource (Access control)  |Role   
 ------ | ------
-|Snapshot RG where the snapshots would be restored   |Disk snapshot contributor  |
+|Resource group (RG) in which the snapshots taken would be stored (specified at the time of creating backup policy)   |Disk snapshot contributor  |
 |Target Disk RG where all disks will be created during restore  |Disk Restore operator   |
 |Source Disk RG (RG where all existing disks of target VM are present)   |Disk Restore operator   |
 |Target VM     |Virtual Machine Contributor    |
+
++ For Snapshot deletion after retention period
+
+Azure Backup Management Service requires the following roles
+
+Resource (Access control)  |Role
+------ | ------
+|Resource group (RG) in which the snapshots taken would be stored (specified at the time of creating backup policy)   |Disk snapshot contributor  |
 
 ## Requirements
 
@@ -43,8 +47,8 @@ Before the snapshot backup, use the following script to give the required roles 
 ```powershell
 .\SetWorkloadSnapshotBackupPermissions.ps1 -Subscription <SubscriptionId> `
             -VirtualMachineResourceGroup <VMResourceGroup> `
-            -VirtualMachineName <SourceWorkloadVMName> `
-            -DiskResourceGroups <DiskResourceGroupsName>,<DiskResourceGroupsName> `
+            -VirtualMachineName @(<SourceWorkloadVMName1>,<SourceWorkloadVMName2>) `
+            -DiskResourceGroups @(<DiskResourceGroupsName1>,<DiskResourceGroupsName2>) `
             -SnapshotResourceGroup <SnapshotResourceGroupName>
 ```
 
@@ -53,10 +57,10 @@ Before the snapshot backup, use the following script to give the required roles 
 ```powershell
 .\SetWorkloadSnapshotBackupPermissions.ps1 -Subscription <SubscriptionId> `
             -VirtualMachineResourceGroup <VMResourceGroup> `
-            -VirtualMachineName <SourceWorkloadVMName> `
-            -DiskResourceGroups <DiskResourceGroupsName>,<DiskResourceGroupsName> `
+            -VirtualMachineName @(<SourceWorkloadVMName1>,<SourceWorkloadVMName2>) `
+            -DiskResourceGroups @(<DiskResourceGroupsName1>,<DiskResourceGroupsName2>) `
             -SnapshotResourceGroup <SnapshotResourceGroupName> `
-            -UserAssignedServiceIdentityId <UserIdentityPrincipalId>
+            -UserAssignedServiceIdentityId <UserIdentityPrincipalARMId>
 ```
 
 Run the following to get more help on the parameters
@@ -71,8 +75,8 @@ Before the snapshot disk restore, use the following script to give the required 
 ```powershell
 .\SetWorkloadSnapshotRestorePermissions.ps1 -Subscription <SubscriptionId> `
             -VirtualMachineResourceGroup <VMResourceGroup> `
-            -VirtualMachineName <SourceWorkloadVMName> `
-            -DiskResourceGroups <DiskResourceGroupsName>,<DiskResourceGroupsName> `
+            -VirtualMachineName @(<SourceWorkloadVMName1>,<SourceWorkloadVMName2>) `
+            -DiskResourceGroups @(<DiskResourceGroupsName1>,<DiskResourceGroupsName2>) `
             -SnapshotResourceGroup <SnapshotResourceGroupName>
 ```
 
@@ -81,10 +85,10 @@ Before the snapshot backup, use the following script to give the required roles 
 ```powershell
 .\SetWorkloadSnapshotRestorePermissions.ps1 -Subscription <SubscriptionId> `
             -VirtualMachineResourceGroup <VMResourceGroup> `
-            -VirtualMachineName <SourceWorkloadVMName> `
-            -DiskResourceGroups <DiskResourceGroupsName>,<DiskResourceGroupsName> `
+            -VirtualMachineName @(<SourceWorkloadVMName1>,<SourceWorkloadVMName2>) `
+            -DiskResourceGroups @(<DiskResourceGroupsName1>,<DiskResourceGroupsName2>) `
             -SnapshotResourceGroup <SnapshotResourceGroupName> `
-            -UserAssignedServiceIdentityId <UserIdentityPrincipalId>
+            -UserAssignedServiceIdentityId <UserIdentityPrincipalARMId>
 ```
 
 Run the following to get more help on the parameters
