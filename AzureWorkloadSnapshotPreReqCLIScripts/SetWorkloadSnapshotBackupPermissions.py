@@ -34,19 +34,19 @@ os.system("color")
 desc = bcolors.OKBLUE + "This script will assign the required roles for the source virtual machine on the respective resource groups for workload snapshot backups. \n \n Assigns Disk Backup Reader on the resource group which has virtual machine disks. \n Assigns Disk Snapshot Contributor on the resource group where workload snapshots will be created." + bcolors.ENDC
 
 parser = argparse.ArgumentParser(description=desc)
-parser.add_argument("--service-principal-id", "-u", help="Service principal id for user assigned service principal")
+parser.add_argument("--identity-id", "-u", help="User assigned identity id")
 
 requiredNamed = parser.add_argument_group('required arguments')
 requiredNamed.add_argument("--subscription", "-s", help="Subscription Id for the virtual machine containing workload", required=True)
 requiredNamed.add_argument("--vm-resource-group", "-v", help="Resource group for the virtual machine containing workload", required=True)
-requiredNamed.add_argument("--vm-name", "-m", help="Virtual machine name containing workload", required=True)
+requiredNamed.add_argument("--vm-names", "-m", nargs='+' , help="Virtual machine names containing workload", required=True)
 requiredNamed.add_argument("--disk-resource-groups", "-d", nargs='+', help="Resource group which contains the data disks", required=True)
 requiredNamed.add_argument("--snapshot-resource-group", "-n", help="Target resource group for disk snapshots", required=True)
 
 args = parser.parse_args()
 subscription = args.subscription
 vm_resource_group = args.vm_resource_group
-vm_name = args.vm_name
+vm_names = args.vm_names
 disk_resource_groups = args.disk_resource_groups
 snapshot_resource_group = args.snapshot_resource_group
 
@@ -64,6 +64,9 @@ else:
     print(bcolors.FAIL + "Script failed with unexpected error ... " + bcolors.ENDC)
     sys.exit()
 
+
+
+"""
 if (args.service_principal_id is not None) and (args.service_principal_id != ""):
     service_principal_id = args.service_principal_id
 else:
@@ -85,16 +88,21 @@ else:
         output = os.system("az vm identity show -n {} -g {} --subscription {} -o tsv --only-show-errors > identityShow.txt".format(vm_name, vm_resource_group, subscription)) 
         identity = [line[:-1] for line in fileinput.input(files='identityShow.txt')]
     
-    service_principal_id = identity[0].split("\t")[0]  # (identity[1].split('"'))[3]
+    service_principal_id = identity[0].split("\t")[0]  # (identity[1].split('"'))[3] 
 
-print(bcolors.OKGREEN + "Assigning permissions to " + service_principal_id + bcolors.ENDC)
+"""
 
-# Assign permissions for disk resource groups
-for disk_resource_group in disk_resource_groups:
-    assignRoleOnResourceGroup(service_principal_id, disk_resource_group, diskBackupReaderRoleName)        
+principalIds = assignIdentityToVMs(args.identity_id, vm_resource_group, vm_names, subscription)
 
-# Assign permissions for snapshot resource groups to VM Identity
-assignRoleOnResourceGroup(service_principal_id, snapshot_resource_group, diskSnapshotContributorRoleName)
+for service_principal_id in principalIds:
+    print(bcolors.OKGREEN + "Assigning permissions to " + service_principal_id + bcolors.ENDC)
+
+    # Assign permissions for disk resource groups
+    for disk_resource_group in disk_resource_groups:
+        assignRoleOnResourceGroup(service_principal_id, disk_resource_group, diskBackupReaderRoleName)        
+
+    # Assign permissions for snapshot resource groups to VM Identity
+    assignRoleOnResourceGroup(service_principal_id, snapshot_resource_group, diskSnapshotContributorRoleName)
 
 # Assign permissions for snapshot resource groups to Backup Management Service
 assignRoleOnResourceGroup(backup_service_principalId, snapshot_resource_group, diskSnapshotContributorRoleName)        
