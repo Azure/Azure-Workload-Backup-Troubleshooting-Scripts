@@ -24,6 +24,7 @@
 import os
 import fileinput
 import sys
+import time
 
 def assignRoleOnResourceGroup(PrincipalId, ResourceGroup, RoleName):
     print(bcolors.OKBLUE + "Fetching assigned role " + RoleName + " for " + PrincipalId + " on resource group " + ResourceGroup + bcolors.ENDC)
@@ -80,6 +81,68 @@ def assignRoleOnScope(PrincipalId, RoleName, Scope):
             sys.exit()
         else:
             print(bcolors.OKBLUE + "Assigned " + RoleName + " role on scope " + Scope + " to " + PrincipalId + " successfully." + bcolors.ENDC)
+
+def assignIdentityToVMs(UserAssignedServiceIdentityId, VirtualMachineResourceGroup, VirtualMachineNames, Subscription):
+    service_principal_id = ""
+    principalIds = []
+
+    if UserAssignedServiceIdentityId is not None:             
+        output = os.system("az identity show --ids {} -o tsv --only-show-errors > msiPrincipal.txt".format(UserAssignedServiceIdentityId))
+
+        if output != 0:
+            print(bcolors.FAIL + "Given user assigned identity is not found or script failed with unexpected error ..." + bcolors.ENDC)
+            print(bcolors.FAIL + "Please re-run the script after some time." + bcolors.ENDC)
+            sys.exit()
+
+        identity = [line[:-1] for line in fileinput.input(files='msiPrincipal.txt')]
+        service_principal_id = identity[0].split('\t')[5]
+        
+        print(bcolors.OKGREEN + "Using user assigned service identity principal " + service_principal_id + bcolors.ENDC)
+        principalIds.append(service_principal_id)
+
+        for virtualMachineName in VirtualMachineNames:            
+            identity = "\"" + UserAssignedServiceIdentityId + "\""
+            print(bcolors.OKBLUE + "Enabling user assigned identity on virtual machine " + virtualMachineName + bcolors.ENDC) 
+            output = os.system("az vm identity assign -n {} -g {} --subscription {} --identities {} -o tsv --only-show-errors > identityAssign.txt".format(virtualMachineName, VirtualMachineResourceGroup, Subscription, identity))
+            
+            if output != 0:
+                print(bcolors.FAIL + "script failed with unexpected error ..." + bcolors.ENDC)
+                print(bcolors.FAIL + "Please re-run the script after some time." + bcolors.ENDC)
+                sys.exit()
+
+            print(bcolors.OKGREEN + "Enabled user assigned identity on virtual machine " + virtualMachineName + bcolors.ENDC) 
+
+    else:
+        
+        for virtualMachineName in VirtualMachineNames:
+
+            output = os.system("az vm identity show -n {} -g {} --subscription {} -o tsv --only-show-errors > identityShow.txt".format(virtualMachineName, VirtualMachineResourceGroup, Subscription))
+
+            identity = [line[:-1] for line in fileinput.input(files='identityShow.txt')]
+
+            if len(identity) == 0 or "systemassigned" not in identity[0].lower():
+                print(bcolors.OKBLUE + "Enabling system assigned identity on virtual machine " + virtualMachineName + bcolors.ENDC) 
+
+                output = os.system("az vm identity assign -n {} -g {} --subscription {} -o tsv --only-show-errors > identityAssign.txt".format(virtualMachineName, VirtualMachineResourceGroup, Subscription))
+
+                if output != 0:
+                    print(bcolors.FAIL + "Script failed with unexpected error while assigning VM identity ..." + bcolors.ENDC)
+                    print(bcolors.FAIL + "Please re-run the script after some time." + bcolors.ENDC)
+                    sys.exit()
+
+                print(bcolors.OKGREEN + "Successfully assigned system identity to VM " + virtualMachineName + bcolors.ENDC)
+                time.sleep(10)
+                
+                output = os.system("az vm identity show -n {} -g {} --subscription {} -o tsv --only-show-errors > identityShow.txt".format(virtualMachineName, VirtualMachineResourceGroup, Subscription)) 
+            else:
+                print(bcolors.OKGREEN + "System assigned identity already enabled on virtual machine " + virtualMachineName + bcolors.ENDC) 
+            
+            identity = [line[:-1] for line in fileinput.input(files='identityShow.txt')]
+            service_principal_id = identity[0].split("\t")[0] # (identity[1].split('"'))[3]
+
+            #check - add to the principalIds list 
+            principalIds.append(service_principal_id)
+    return principalIds
 
 class bcolors:
     HEADER = '\033[95m'

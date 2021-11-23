@@ -58,8 +58,7 @@ output = os.system("az login -o tsv --only-show-errors > login.txt")
 output = os.system("az account set -s {} -o tsv --only-show-errors > context.txt".format(subscription))
 
 if output == 0:
-    print(bcolors.OKGREEN + "Successfully logged in to subscription " + subscription + "." + bcolors.ENDC)
-    pass
+    print(bcolors.OKGREEN + "Successfully logged in to subscription " + subscription + "." + bcolors.ENDC)    
 else:
     print(bcolors.FAIL + "Script failed with unexpected error ... " + bcolors.ENDC)
     sys.exit()
