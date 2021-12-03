@@ -31,7 +31,6 @@ os.system("color")
 desc = bcolors.OKBLUE + "This script will assign the given identity to VMs in VM list or enables system assigned identities on VMs" + bcolors.ENDC
 
 parser = argparse.ArgumentParser(description=desc)
-# parser.add_argument("--service-principal-id", "-u", help="Service principal id for user assigned service principal")
 parser.add_argument("--user-assigned-service-identity-id", "-u", help="ARMId of the UserAssignedServiceIdentity \n \n /subscriptions/{subscripton-id}/resourceGroups/{resource-group}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identity-name}")
 
 requiredNamed = parser.add_argument_group('required arguments')

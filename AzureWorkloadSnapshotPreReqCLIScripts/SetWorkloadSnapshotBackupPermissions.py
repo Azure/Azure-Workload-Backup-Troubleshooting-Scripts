@@ -64,34 +64,6 @@ else:
     print(bcolors.FAIL + "Script failed with unexpected error ... " + bcolors.ENDC)
     sys.exit()
 
-
-
-"""
-if (args.service_principal_id is not None) and (args.service_principal_id != ""):
-    service_principal_id = args.service_principal_id
-else:
-    output = os.system("az vm identity show -n {} -g {} --subscription {} -o tsv --only-show-errors > identityShow.txt".format(vm_name, vm_resource_group, subscription)) 
-
-    print(bcolors.OKGREEN + "Successfully listed VM identity ... " + bcolors.ENDC)
-    identity = [line[:-1] for line in fileinput.input(files='identityShow.txt')]
-
-    if len(identity) == 0:
-        output = os.system("az vm identity assign -n {} -g {} --subscription {} -o tsv --only-show-errors > identityAssign.txt".format(vm_name, vm_resource_group, subscription))
-
-        if output != 0:
-            print(bcolors.FAIL + "Script failed with unexpected error while assigning VM identity ..." + bcolors.ENDC)
-            sys.exit()
-
-        print(bcolors.OKGREEN + "Successfully assigned identity to VM " + vm_name + bcolors.ENDC)
-        time.sleep(10)
-
-        output = os.system("az vm identity show -n {} -g {} --subscription {} -o tsv --only-show-errors > identityShow.txt".format(vm_name, vm_resource_group, subscription)) 
-        identity = [line[:-1] for line in fileinput.input(files='identityShow.txt')]
-    
-    service_principal_id = identity[0].split("\t")[0]  # (identity[1].split('"'))[3] 
-
-"""
-
 principalIds = assignIdentityToVMs(args.identity_id, vm_resource_group, vm_names, subscription)
 
 for service_principal_id in principalIds:
