@@ -43,13 +43,13 @@ Az CLI module is required to be installed on your machine before running the pyt
 Before the snapshot backup, use the following script to give the required roles to the virtual machine system identity
 
 ```cmd
-python SetWorkloadSnapshotBackupPermissions.py --subscription <SubscriptionId> --vm-resource-group <VMResourceGroup> --vm-name  <SourceWorkloadVMName> --disk-resource-groups DiskResourceGroupsName> <DiskResourceGroupsName> --snapshot-resource-group <SnapshotResourceGroupName>
+python SetWorkloadSnapshotBackupPermissions.py --subscription <SubscriptionId> --vm-resource-group <VMResourceGroup> --vm-names  <SourceWorkloadVMName1> <SourceWorkloadVMName2> --disk-resource-groups <DiskResourceGroupsName> <DiskResourceGroupsName> --snapshot-resource-group <SnapshotResourceGroupName>
 ```
 
 Before the snapshot backup, use the following script to give the required roles to the user identity
 
 ```cmd
-python SetWorkloadSnapshotBackupPermissions.py  --subscription <SubscriptionId> --vm-resource-group <VMResourceGroup> --vm-name  <SourceWorkloadVMName> --disk-resource-groups <DiskResourceGroupsName> <DiskResourceGroupsName> --snapshot-resource-group <SnapshotResourceGroupName> --service-principal-id <UserIdentityPrincipalId>
+python SetWorkloadSnapshotBackupPermissions.py  --subscription <SubscriptionId> --vm-resource-group <VMResourceGroup> --vm-names  <SourceWorkloadVMName1> <SourceWorkloadVMName2> --disk-resource-groups <DiskResourceGroupsName> <DiskResourceGroupsName> --snapshot-resource-group <SnapshotResourceGroupName> --identity-id <UserIdentityId>
 ```
 
 Run the following to get more help on the parameters
@@ -62,13 +62,13 @@ python SetWorkloadSnapshotBackupPermissions.py --help
 Before the snapshot disk restore, use the following script to give the required roles to the virtual machine system identity
 
 ```cmd
-python SetWorkloadSnapshotRestorePermissions.py --subscription <SubscriptionId> --vm-resource-group <VMResourceGroup> --vm-name <SourceWorkloadVMName> --disk-resource-groups <DiskResourceGroupsName> <DiskResourceGroupsName> --snapshot-resource-group <SnapshotResourceGroupName> 
+python SetWorkloadSnapshotRestorePermissions.py --subscription <SubscriptionId> --vm-resource-group <VMResourceGroup> --vm-names  <SourceWorkloadVMName1> <SourceWorkloadVMName2> --disk-resource-groups <DiskResourceGroupsName> <DiskResourceGroupsName> --snapshot-resource-group <SnapshotResourceGroupName> 
 ```
 
 Before the snapshot backup, use the following script to give the required roles to the user identity
 
 ```cmd
-python SetWorkloadSnapshotRestorePermissions.py ---subscription <SubscriptionId> --vm-resource-group <VMResourceGroup> --vm-name <SourceWorkloadVMName> --disk-resource-groups DiskResourceGroupsName> <DiskResourceGroupsName> --snapshot-resource-group <SnapshotResourceGroupName> --service-principal-id <UserIdentityPrincipalId>
+python SetWorkloadSnapshotRestorePermissions.py ---subscription <SubscriptionId> --vm-resource-group <VMResourceGroup> --vm-names  <SourceWorkloadVMName1> <SourceWorkloadVMName2> --disk-resource-groups DiskResourceGroupsName> <DiskResourceGroupsName> --snapshot-resource-group <SnapshotResourceGroupName> --identity-id <UserIdentityId>
 ```
 
 Run the following to get more help on the parameters
