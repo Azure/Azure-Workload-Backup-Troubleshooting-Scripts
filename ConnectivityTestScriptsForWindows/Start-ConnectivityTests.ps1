@@ -52,7 +52,7 @@ Param(
     )
 
 # Context
-$ScriptRoot = $PSCommandPath.Replace("\Run-ConnectivityTests.ps1", "")
+$ScriptRoot = $PSCommandPath.Replace("\Start-ConnectivityTests.ps1", "")
 $ActiveDirectoryDllPath = "$ScriptRoot\Microsoft.IdentityModel.Clients.ActiveDirectory.dll"
 $DiagnosticScriptsDllPath = "$ScriptRoot\DiagnosticScripts.dll"
 $NewtonsoftJsonDllPath = "$ScriptRoot\Newtonsoft.Json.dll"
