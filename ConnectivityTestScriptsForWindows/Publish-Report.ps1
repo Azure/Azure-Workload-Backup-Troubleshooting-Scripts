@@ -62,6 +62,7 @@ Resolve-DnsName login.microsoftonline.com
 Network Security Groups for a virtual machine can be checked at Azure portal Virtual machine blade -> Networking Settings -> Network Interface -> Outbound port rules. <IMG SRC='media/VMNetworkblade.png' ALT='Virtual machine NSG outbound port rules' width=1024 height=480/>
 </br>
 If the rule is missing, Click on 'Add outbound port rule' and fill in the source as Virtual network, destination as Service tag and Destination Service tag as AzureActiveDirectory. Set Action as Allow and click Add.
+Specific ports for this connection can be found under sections 56 and 59 in <a href='https://docs.microsoft.com/microsoft-365/enterprise/urls-and-ip-address-ranges?view=o365-worldwide&preserve-view=true#microsoft-365-common-and-office-online'> Microsoft 365 Common and Office Online .</a>
 </br>
 <img src='media/AddOutboundRuleAAD.png' alt='Add outbound port rule blade for Azure active directory' height=480 width=256/>
 </li>
@@ -82,6 +83,7 @@ $AzureBackupCommonIssue =
 Network Security Groups for a virtual machine can be checked at Azure portal Virtual machine blade -> Networking Settings -> Network Interface -> Outbound port rules. <IMG SRC='media/VMNetworkblade.png' ALT='Virtual machine NSG outbound port rules' width=1024 height=480/>
 </br>
 If the rule is missing, Click on 'Add outbound port rule' and fill in the source as Virtual network, destination as Service tag and Destination Service tag as AzureBackup. Set Action as Allow and click Add.
+Specific ports for this connection can be found in <a href='https://docs.microsoft.com/azure/backup/backup-sql-server-database-azure-vms#allow-access-to-service-fqdns'> this section </a>
 </br>
 <img src='media/AddOutboundRuleBackup.png' alt='Add outbound port rule blade for Azure backup' height=480 width=256/>
 </br>
@@ -141,6 +143,7 @@ $AzureStorageCommonIssue =
 Network Security Groups for a virtual machine can be checked at Azure portal Virtual machine blade -> Networking Settings -> Network Interface -> Outbound port rules. <IMG SRC='media/VMNetworkblade.png' ALT='Virtual machine NSG outbound port rules' width=1024 height=480/>
 </br>
 If the rule is missing, Click on 'Add outbound port rule' and fill in the source as Virtual network, destination as Service tag and Destination Service tag as Storage. Set Action as Allow and click Add.
+Specific ports for this connection can be found in <a href='https://docs.microsoft.com/azure/backup/backup-sql-server-database-azure-vms#allow-access-to-service-fqdns'> this section </a>
 </br>
 <img src='media/AddOutboundRuleStorage.png' alt='Add outbound port rule blade for Azure storage' height=480 width=256/>
 </br>
