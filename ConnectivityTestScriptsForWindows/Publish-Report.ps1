@@ -51,9 +51,21 @@ $AADCommonIssue =
 <div style='background-color:#FF033E;color:white;padding:20px;'>
 <h2>Azure Active Directory (AAD) Common Issue</h2>
 <ul>
-<li> Check resolution for AAD FQDN login.microsoftonline.com (Azure AD Global service), login.microsoftonline.us (Azure AD for US Government) , login.partner.microsoftonline.cn (Azure AD China)</li>
-<li> Check Network Security Group (NSG) attached to subnet, NSG should allow outbound connection to Service Tag AAD <a href = 'https://docs.microsoft.com/azure/virtual-network/service-tags-overview'>Service Tags</a></li>
-Check firewall settings for outbound connection to URLs mentioned under sections 56 and 59 in <a href='https://docs.microsoft.com/microsoft-365/enterprise/urls-and-ip-address-ranges?view=o365-worldwide&preserve-view=true#microsoft-365-common-and-office-online'> Microsoft 365 Common and Office Online .</a> </li>
+<li> Check DNS resolution for Azure active directory FQDN login.microsoftonline.com (Azure AD Global service), login.microsoftonline.us (Azure AD for US Government) , login.partner.microsoftonline.cn (Azure AD China). 
+</br>
+Run 
+</br>
+Resolve-DnsName login.microsoftonline.com
+</br> (or equivalent FQDN for the Azure environment in powershell) on the machine and verify if you are able to resolve the uri. </li>
+<li> Check Network Security Group (NSG) attached to virtual machine's subnet, NSG should allow outbound connection to AzureActiveDirectory <a href = 'https://docs.microsoft.com/azure/virtual-network/service-tags-overview'>Service Tags</a>
+</br>
+Network Security Groups for a virtual machine can be checked at Azure portal Virtual machine blade -> Networking Settings -> Network Interface -> Outbound port rules. <IMG SRC='media/VMNetworkblade.png' ALT='Virtual machine NSG outbound port rules' width=1024 height=480/>
+</br>
+If the rule is missing, Click on 'Add outbound port rule' and fill in the source as Virtual network, destination as Service tag and Destination Service tag as AzureActiveDirectory. Set Action as Allow and click Add.
+</br>
+<img src='media/AddOutboundRuleAAD.png' alt='Add outbound port rule blade for Azure active directory' height=480 width=256/>
+</li>
+Check your firewall settings for outbound connection to URLs mentioned under sections 56 and 59 in <a href='https://docs.microsoft.com/microsoft-365/enterprise/urls-and-ip-address-ranges?view=o365-worldwide&preserve-view=true#microsoft-365-common-and-office-online'> Microsoft 365 Common and Office Online .</a> </li>
 </ul>
 </div>
 "
@@ -65,8 +77,15 @@ $AzureBackupCommonIssue =
 <ul>
 <li> <b>Azure Workload backup doesn't support authenticated Proxy servers. <a href ='https://docs.microsoft.com/azure/backup/backup-sql-server-database-azure-vms#use-an-http-proxy-server-to-route-traffic'> Use an HTTP proxy server to route traffic</a> </b></li>
 <li> Azure Workload Backup only support TLS 1.2 . Change TLS registry settings as described <a href = 'https://docs.microsoft.com/windows-server/security/tls/tls-registry-settings'>here</a> to enable TLS 1.2 .</li>
-<li> If not using Private Endpoint, check Network Security Group (NSG) attached to subnet, NSG should allow outbound connection to Service Tag AzureBackup <a href = 'https://docs.microsoft.com/azure/virtual-network/service-tags-overview'>Service Tags. </a>
-Check firewall settings for outbound connection to URLs mentioned in <a href='https://docs.microsoft.com/azure/backup/backup-sql-server-database-azure-vms#allow-access-to-service-fqdns'> this section </a></li>
+<li> If not using Private Endpoint, check Network Security Group (NSG) attached to subnet, NSG should allow outbound connection to AzureBackup <a href = 'https://docs.microsoft.com/azure/virtual-network/service-tags-overview'>Service Tags. </a>
+</br>
+Network Security Groups for a virtual machine can be checked at Azure portal Virtual machine blade -> Networking Settings -> Network Interface -> Outbound port rules. <IMG SRC='media/VMNetworkblade.png' ALT='Virtual machine NSG outbound port rules' width=1024 height=480/>
+</br>
+If the rule is missing, Click on 'Add outbound port rule' and fill in the source as Virtual network, destination as Service tag and Destination Service tag as AzureBackup. Set Action as Allow and click Add.
+</br>
+<img src='media/AddOutboundRuleBackup.png' alt='Add outbound port rule blade for Azure backup' height=480 width=256/>
+</br>
+Check your firewall settings for outbound connection to URLs mentioned in <a href='https://docs.microsoft.com/azure/backup/backup-sql-server-database-azure-vms#allow-access-to-service-fqdns'> this section </a></li>
 <li> If the connection status for service contains 'The remote name could not be resolved', ensure the DNS is configured properly to resolve the required URLs. If you are using private endpoint, guidance for DNS management is documented <a href ='https://docs.microsoft.com/azure/backup/private-endpoints#manage-dns-records'>here</a></li>
 </ul>
 </div>
@@ -103,6 +122,9 @@ If you are using Azure Private DNS zone, ensure the Private DNS zones are linked
     </tr>        
 </table>
 If you are using Custom DNS, ensure you have added the required DNS entries. You can check the DNS entries in the DNS configuration tab for Private endpoint created for Recovery Services Vault.
+</br>
+<img src='media/PEDNSConfig.png' alt='DNS configuration for the private endpoint' width=1024 height=640/>
+</br>
 </li>
 <li> If you are using a private DNS zone which is in a subscription different from the RS vault's subscription, follow the guidance <a href= 'https://docs.microsoft.comazure/backup/private-endpoints#create-dns-entries-when-the-dns-serverdns-zone-is-present-in-another-subscription'>here</a></li>
 <li> If you are using a proxy server, you can bypass the domains mentioned <a href ='https://docs.microsoft.com/azure/backup/private-endpoints-overview#difference-in-network-connections-due-to-private-endpoints'>here</a>, this is needed for workload extension to traffic network to private IP directly.</li>
@@ -114,8 +136,15 @@ $AzureStorageCommonIssue =
 <div style='background-color:#FF033E;color:white;padding:20px;'>
 <h2>Azure Storage Common Issue</h2>
 <ul>
-<li> Check Network Security Group (NSG) attached to subnet, NSG should allow outbound connection to Service Tag Storage <a href = 'https://docs.microsoft.com/azure/virtual-network/service-tags-overview'>Service Tags</a>
-Check firewall settings for outbound connection to URLs mentioned in <a href='https://docs.microsoft.com/azure/backup/backup-sql-server-database-azure-vms#allow-access-to-service-fqdns'> this section </a> </li>
+<li> Check Network Security Group (NSG) attached to virtual machine's subnet, NSG should allow outbound connection to Storage <a href = 'https://docs.microsoft.com/azure/virtual-network/service-tags-overview'>Service Tags</a>
+</br>
+Network Security Groups for a virtual machine can be checked at Azure portal Virtual machine blade -> Networking Settings -> Network Interface -> Outbound port rules. <IMG SRC='media/VMNetworkblade.png' ALT='Virtual machine NSG outbound port rules' width=1024 height=480/>
+</br>
+If the rule is missing, Click on 'Add outbound port rule' and fill in the source as Virtual network, destination as Service tag and Destination Service tag as Storage. Set Action as Allow and click Add.
+</br>
+<img src='media/AddOutboundRuleStorage.png' alt='Add outbound port rule blade for Azure storage' height=480 width=256/>
+</br>
+Check your firewall settings for outbound connection to URLs mentioned in <a href='https://docs.microsoft.com/azure/backup/backup-sql-server-database-azure-vms#allow-access-to-service-fqdns'> this section </a> </li>
 </ul>
 </div>
 "
@@ -213,18 +242,15 @@ $tlsSettings = "<table style=""width:100%"" border=""1"">
     </tr>
     <tr>
         <td width=""(100/2)%"">TLS</td>
-        <td width=""(100/2)%"">Enabled for Server : $($report.report.TLSSettings.TLS.Server -ne "0")</br>
-        Enabled for Client : $($report.report.TLSSettings.TLS.Client -ne "0")</td>
+        <td width=""(100/2)%"">Enabled for Client : $($report.report.TLSSettings.TLS.Client -ne "0")</td>
     </tr>
     <tr>
         <td width=""(100/2)%"">TLS 1.0</td>
-        <td width=""(100/2)%"">Enabled for Server : $($report.report.TLSSettings.TLS11.Server -ne "0")</br>
-        Enabled for Client : $($report.report.TLSSettings.TLS11.Client -ne "0")</td>
+        <td width=""(100/2)%"">Enabled for Client : $($report.report.TLSSettings.TLS11.Client -ne "0")</td>
     </tr>
     <tr>
         <td width=""(100/2)%"">TLS 1.2</td>
-        <td width=""(100/2)%"">Enabled for Server : $($report.report.TLSSettings.TLS12.Server -ne "0")</br>
-        Enabled for Client : $($report.report.TLSSettings.TLS12.Client -ne "0")</td>
+        <td width=""(100/2)%"">Enabled for Client : $($report.report.TLSSettings.TLS12.Client -ne "0")</td>
     </tr>        
 </tbody>
 </table>"
@@ -264,7 +290,7 @@ $html = "
 <html>
 
 <body>
-    <h1>Azure Workload Backup Conectivity Status</h1>
+    <h1>Azure Workload Backup Connectivity Status</h1>
     <h3 style=""background-color:powderblue; font-family:helvetica;""> Private Endpoint Tests (If configured) </h3>
     <div class = ""DNSResolution"">
         <h4 style=""background-color:lightgreen; font-family:helvetica;""> DNS Resolution </h4>
@@ -291,7 +317,7 @@ $html = "
     <br><br>
     <h3 style=""background-color:powderblue; font-family:helvetica;""> Proxy Settings </h3>
     <div style='background-color:#007FFF;color:white;padding:20px;'>
-    <h3> <b> If Proxy Settings are not common for all users, ensure the settings for user NT Authority\System and NT Service\AzureWLBackupPluginSvc are same. Run Set-ProxySettingsForPluginUser.ps1 with NT Authority\System user context to configure settings for NT Service\AzureWLBackupPluginSvc</b></h3>
+    <h3> <b> If Proxy Settings are not common for all users, ensure the settings for user NT Authority\System and NT Service\AzureWLBackupPluginSvc are same. Run Set-ProxySettingsForPluginUser.ps1 as NT Authority\System user to set the settings for NT Service\AzureWLBackupPluginSvc user same as LocalSystem user</b></h3>
     </div>
 	$($report.report.ProxySettings)
 </body>
