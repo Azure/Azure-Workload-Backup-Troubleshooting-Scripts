@@ -62,7 +62,7 @@ Run
 </br>
 Resolve-DnsName login.microsoftonline.com
 </br> (or equivalent FQDN for the Azure environment in powershell) on the machine and verify if the uri resolution goes through.</li>
-<li> Check the Network Security Group (NSG) attached to virtual machine's subnet, NSG should allow outbound connection to AzureActiveDirectory <a href = 'https://docs.microsoft.com/azure/virtual-network/service-tags-overview'>Service Tags</a>
+<li> Check the Network Security Group (NSG) attached to virtual machine's subnet, NSG should allow outbound connection to 'AzureActiveDirectory' <a href = 'https://docs.microsoft.com/azure/virtual-network/service-tags-overview'>Service Tags</a>
 </br>
 Network Security Groups for a virtual machine can be checked at Azure portal Virtual machine blade -> Networking Settings -> Network Interface -> Outbound port rules. <IMG SRC='media/VMNetworkblade.png' ALT='Virtual machine NSG outbound port rules' width=1024 height=480/>
 </br>
@@ -83,7 +83,7 @@ $AzureBackupCommonIssue =
 <ul>
 <li> <b>Azure Workload Backup doesn't support authenticated Proxy servers. <a href ='https://docs.microsoft.com/azure/backup/backup-sql-server-database-azure-vms#use-an-http-proxy-server-to-route-traffic'> Use an HTTP proxy server to route traffic</a> </b></li>
 <li> Azure Workload Backup only supports TLS 1.2. Change TLS registry settings as described <a href = 'https://docs.microsoft.com/windows-server/security/tls/tls-registry-settings'>here</a> to enable TLS 1.2.</li>
-<li> If not using Private Endpoint, check the Network Security Group (NSG) attached to subnet, NSG should allow outbound connection to AzureBackup <a href = 'https://docs.microsoft.com/azure/virtual-network/service-tags-overview'>Service Tags.</a>
+<li> If not using Private Endpoint, check the Network Security Group (NSG) attached to subnet, NSG should allow outbound connection to 'AzureBackup' <a href = 'https://docs.microsoft.com/azure/virtual-network/service-tags-overview'>Service Tags.</a>
 </br>
 Network Security Groups for a virtual machine can be checked at Azure portal Virtual machine blade -> Networking Settings -> Network Interface -> Outbound port rules. <IMG SRC='media/VMNetworkblade.png' ALT='Virtual machine NSG outbound port rules' width=1024 height=480/>
 </br>
@@ -143,7 +143,7 @@ $AzureStorageCommonIssue =
 <div style='background-color:#FF033E;color:white;padding:20px;'>
 <h2>Azure Storage Common Issue</h2>
 <ul>
-<li> Check the Network Security Group (NSG) attached to virtual machine's subnet, NSG should allow outbound connection to Storage <a href = 'https://docs.microsoft.com/azure/virtual-network/service-tags-overview'>Service Tags</a>
+<li> Check the Network Security Group (NSG) attached to virtual machine's subnet, NSG should allow outbound connection to 'Storage' <a href = 'https://docs.microsoft.com/azure/virtual-network/service-tags-overview'>Service Tags</a>
 </br>
 Network Security Groups for a virtual machine can be checked at Azure portal Virtual machine blade -> Networking Settings -> Network Interface -> Outbound port rules. <IMG SRC='media/VMNetworkblade.png' ALT='Virtual machine NSG outbound port rules' width=1024 height=480/>
 </br>
