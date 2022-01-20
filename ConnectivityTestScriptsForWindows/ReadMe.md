@@ -25,7 +25,7 @@ Else, the script will automatically start connection tests. The script will prep
 
 4. Open the ReportPage.html for the report.
 
-## How to read Azure Workload Backup Conectivity Status report 
+## How to read Azure Workload Backup Connectivity Status report 
 
 | Test| Description |
 |---|---|
