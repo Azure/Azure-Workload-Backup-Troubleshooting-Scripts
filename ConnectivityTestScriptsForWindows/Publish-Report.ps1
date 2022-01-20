@@ -103,7 +103,7 @@ $PrivateEndpointCommonIssue =
 <div style='background-color:#FF033E;color:white;padding:20px;'>
 <h2>Azure Backup Private Endpoint Common Issue</h2>
 <li> Azure workload Backup requires the DNS resolution for Azure Backup service URLs to Private IP for trafficing the network on Azure backbone. Documentation for <a href= 'https://docs.microsoft.com/azure/backup/private-endpoints#manage-dns-records'> DNS Management.</a>
-If you are using Azure Private DNS zone, ensure the Private DNS zones are linked to the VNET. You can more information on private dns zone VNET link <a href= 'https://docs.microsoft.com/azure/dns/private-dns-virtual-network-links'> here.</a>
+If you are using Azure Private DNS zone, ensure that the Private DNS zones are linked to the VNET. You can more information on private dns zone VNET link <a href= 'https://docs.microsoft.com/azure/dns/private-dns-virtual-network-links'> here.</a>
 <table>
     <tr>
         <th>Private DNS Zone</th>
