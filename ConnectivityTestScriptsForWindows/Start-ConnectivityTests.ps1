@@ -154,12 +154,12 @@ try
 
                     $error.clear()
                     $privateip = $null
-                    $privateip = Resolve-DnsName $serviceUrl
+                    $privateip = Resolve-DnsName $serviceUrl -ErrorAction SilentlyContinue
 
                     if( $privateip -eq $null)
                     {
-                        TraceMessage "`nFailed to resolve $serviceUrl"  "Red"
-                        $dns.PrivateIp = $error
+                        TraceMessage "`nFailed to resolve1 $serviceUrl"  "Red"
+                        $dns.PrivateIp = $error[0].ToString()
                     }
                     else
                     {
@@ -259,14 +259,14 @@ try
 
         try
         {
-            $dnsMap = $workloadExtensionDiagnosticHelper.TryResolveStorageFQDNDNS("$ConfigJsonDirPath\AzureWLBackupCoordinatorSvc_config.json", $DllLogFilePath)  | ConvertFrom-Json
-            if ($dnsMap -eq $null)
+            $dnsMap = $workloadExtensionDiagnosticHelper.TryResolveStoragePrivateUrl("$ConfigJsonDirPath\AzureWLBackupCoordinatorSvc_config.json", $DllLogFilePath)  | ConvertFrom-Json
+            if ($dnsMap -eq $null -or ($dnsMap.DNSEntry -eq $null) )
             {
                 TraceMessage "`nFailed to resolve storage url"  "Red"
             }
             else
             {
-                $dns.DNSEntry = $dnsMap.DNSEntry
+                $dns.DNSEntry = $dnsMap.DNSEntry.ToString()
                 $dns.PrivateIp = $dnsMap.PrivateIp
             }
 
@@ -317,33 +317,42 @@ catch
 }
 
 #TLS Settings
-$CurrentDefaultSettings =  ‘{0:x}‘ -f  (Get-ItemProperty 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings').SecureProtocols
-$DefaultSettings = ""
-if ( ($CurrentDefaultSettings[-2] -eq '8' ) -or ($CurrentDefaultSettings[-2] -eq 'a') )
-{
-    $DefaultSettings = "TLS 1.0;" + $DefaultSettings
-}
-if ( ($CurrentDefaultSettings[-3] -eq '2' ) -or ($CurrentDefaultSettings[-3] -eq 'a') )
-{
-    $DefaultSettings = "TLS 1.1;" + $DefaultSettings
-}
-if ( ($CurrentDefaultSettings[-3] -eq '8' ) -or ($CurrentDefaultSettings[-3] -eq 'a') )
-{
-    $DefaultSettings = "TLS 1.2;" + $DefaultSettings
-}
 
-$Report.report.TLSSettings.DefaultSettings = $DefaultSettings
+TraceMessage "`n=============Fetching TLS settings==================="  "Yellow"
 
-$tlsSettings = [System.Net.SecurityProtocolType]::Tls, [System.Net.SecurityProtocolType]::Tls11, [System.Net.SecurityProtocolType]::Tls12
-$TLSSettingsMap = @{[System.Net.SecurityProtocolType]::Tls="TLS 1.0" ; [System.Net.SecurityProtocolType]::Tls11="TLS 1.1" ; [System.Net.SecurityProtocolType]::Tls12="TLS 1.2"}
-
-foreach ( $tlsSetting in $tlsSettings)
+try
 {
-    $tlsVersion = ($("$tlsSetting") | Out-String).Trim()
-    $Report.report.TLSSettings."$tlsVersion".Server = ((Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\$($TLSSettingsMap[$($tlsSetting)])\Server").Enabled | Out-String).Trim()
-    $Report.report.TLSSettings."$tlsVersion".Client = ((Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\$($TLSSettingsMap[$($tlsSetting)])\Client").Enabled | Out-String).Trim()
-}
+    $CurrentDefaultSettings =  ‘{0:x}‘ -f  (Get-ItemProperty 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings' -ErrorAction SilentlyContinue).SecureProtocols
+    $DefaultSettings = ""
+    if ( ($CurrentDefaultSettings[-2] -eq '8' ) -or ($CurrentDefaultSettings[-2] -eq 'a') )
+    {
+        $DefaultSettings = "TLS 1.0;" + $DefaultSettings
+    }
+    if ( ($CurrentDefaultSettings[-3] -eq '2' ) -or ($CurrentDefaultSettings[-3] -eq 'a') )
+    {
+        $DefaultSettings = "TLS 1.1;" + $DefaultSettings
+    }
+    if ( ($CurrentDefaultSettings[-3] -eq '8' ) -or ($CurrentDefaultSettings[-3] -eq 'a') )
+    {
+        $DefaultSettings = "TLS 1.2;" + $DefaultSettings
+    }
 
+    $Report.report.TLSSettings.DefaultSettings = $DefaultSettings
+
+    $tlsSettings = [System.Net.SecurityProtocolType]::Tls, [System.Net.SecurityProtocolType]::Tls11, [System.Net.SecurityProtocolType]::Tls12
+    $TLSSettingsMap = @{[System.Net.SecurityProtocolType]::Tls="TLS 1.0" ; [System.Net.SecurityProtocolType]::Tls11="TLS 1.1" ; [System.Net.SecurityProtocolType]::Tls12="TLS 1.2"}
+
+    foreach ( $tlsSetting in $tlsSettings)
+    {
+        $tlsVersion = ($("$tlsSetting") | Out-String).Trim()
+        $Report.report.TLSSettings."$tlsVersion".Server = ((Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\$($TLSSettingsMap[$($tlsSetting)])\Server" -ErrorAction SilentlyContinue).Enabled | Out-String).Trim()
+        $Report.report.TLSSettings."$tlsVersion".Client = ((Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\$($TLSSettingsMap[$($tlsSetting)])\Client" -ErrorAction SilentlyContinue).Enabled | Out-String).Trim()
+    }
+}
+catch
+{
+    TraceMessage "`nFailed to determine TLS settings" "Red"
+}
 
 # Removing Temp file
 if ( Test-Path -Path "$ScriptRoot\ProxySettings.txt")
