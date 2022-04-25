@@ -158,7 +158,7 @@ try
 
                     if( $privateip -eq $null)
                     {
-                        TraceMessage "`nFailed to resolve1 $serviceUrl"  "Red"
+                        TraceMessage "`nFailed to resolve $serviceUrl"  "Red"
                         $dns.PrivateIp = $error[0].ToString()
                     }
                     else
