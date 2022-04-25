@@ -89,14 +89,14 @@ function TraceMessage([string] $message, [string] $color="Yellow")
 try
 {
     Add-Type -Path $ActiveDirectoryDllPath
-    TraceMessage "`nLoaded ADAL library from $ActiveDirectoryDllPath"
+    TraceMessage "Loaded ADAL library from $ActiveDirectoryDllPath"
     Add-Type -Path $DiagnosticScriptsDllPath
-    TraceMessage "`nLoaded $DiagnosticScriptsDllPath"
+    TraceMessage "Loaded $DiagnosticScriptsDllPath"
 }
 catch
 {
-    TraceMessage "`n $($_.Exception.Message)"
-    TraceMessage "`n $($_.Exception.StackTrace)"
+    TraceMessage "$($_.Exception.Message)"
+    TraceMessage "$($_.Exception.StackTrace)"
 }
 
 # Read RegisteredCatalogObject Table
@@ -104,7 +104,7 @@ $RegisteredObjectFilePath = $null
 
 while ($RegisteredObjectFilePath -eq $null )
 {
-    TraceMessage "`n Waiting for the RegistrationObjectCatalogTable file. Trigger Discovery from portal."
+    TraceMessage "Waiting for the RegistrationObjectCatalogTable file. Trigger Discovery from portal."
     Start-Sleep -s 1
     if (Test-Path $RegisteredObjectCatalogDirPath)
     {
@@ -112,12 +112,13 @@ while ($RegisteredObjectFilePath -eq $null )
     }
 }
 
-TraceMessage "`n Using $RegisteredObjectFilePath"
+TraceMessage "Using $RegisteredObjectFilePath"
 
 try
 {
-    TraceMessage "`nCurrent TLS Settings $([System.Net.ServicePointManager]::SecurityProtocol)" "Cyan"
-    TraceMessage "`nFetching AAD token..."
+    TraceMessage "***********************  Azure Active Directory Connectivity Tests ***************************" "White"
+    TraceMessage "Current TLS Settings $([System.Net.ServicePointManager]::SecurityProtocol)" "Cyan"
+    TraceMessage "Fetching AAD token..."
 
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls -bor  [System.Net.SecurityProtocolType]::Tls11 -bor [System.Net.SecurityProtocolType]::Tls12
     
@@ -132,25 +133,27 @@ try
 
     if ($authenticationResult -ne $null -and [string]::IsNullOrWhiteSpace($authenticationResult.AccessToken) -eq $false)
     {
-        TraceMessage "`nToken fetched successfully" "Green"
+        TraceMessage "Token fetched successfully" "Green"
         $Report.report.ConnectivityTests.AAD.Status = "Green"
 
         # Test Private endpoint related connections
         if( $IsPrivateEndpointEnabled.IsPresent )
         {
+            TraceMessage "***********************  Private Endpoint DNS Resolution Tests ***************************" "White"
             $services = $BCM,$Protection,$IdMgmt,$ECS,$Fabric,$Telemetry
 
             foreach ($service in $services)
             {
                 $urlPrefix = "https://"
                 $serviceUrl = "$($ro.ResourceId)-ab-" + $ro.ObjectServiceUrls.$service.Substring( $urlPrefix.Length, $ro.ObjectServiceUrls.$service.IndexOf(".")-$urlPrefix.Length) + "$(".privatelink." + $ro.ObjectServiceUrls.$service.Substring($ro.ObjectServiceUrls.$service.IndexOf(".")+1))"
+                $serviceUrl = $serviceUrl.Trim('/')
 
                 $dns = $Report.report.PrivateEndpointTests.DNSResolutions.DNS[0].Clone()
                 $dns.DNSEntry = $serviceUrl
 
                 try
                 {
-                    TraceMessage "`nTesting DNS resolution $serviceUrl"
+                    TraceMessage "Testing DNS resolution for $serviceUrl"
 
                     $error.clear()
                     $privateip = $null
@@ -158,7 +161,7 @@ try
 
                     if( $privateip -eq $null)
                     {
-                        TraceMessage "`nFailed to resolve $serviceUrl"  "Red"
+                        TraceMessage "Failed to resolve $serviceUrl"  "Red"
                         $dns.PrivateIp = $error[0].ToString()
                     }
                     else
@@ -166,16 +169,18 @@ try
                         $dns.PrivateIp = $privateip.IPAddress
                     }
 
-                    $Report.report.PrivateEndpointTests.DNSResolutions.AppendChild($dns)
-                    $Report.report.PrivateEndpointTests.DNSResolutions                   
-                   
+                    $Report.report.PrivateEndpointTests.DNSResolutions.AppendChild($dns) | Out-Null
+                    TraceMessage "$serviceUrl resolved to $($privateip.IPAddress)"
                 }
                 catch
                 {
-                    TraceMessage "`nFailed to resolve $serviceUrl"  "Red"
+                    TraceMessage "Failed to resolve $serviceUrl"  "Red"
                     TraceMessage $_
                 }
             }
+
+            TraceMessage "DNS Resolution summary" "Cyan"
+            TraceMessage $($Report.report.PrivateEndpointTests.DNSResolutions.DNS | Out-String) "Cyan"
 
             $fabricSvcUrl = "$($ro.ResourceId)-ab-" + $ro.ObjectServiceUrls.Fabric.Substring($urlPrefix.Length,$ro.ObjectServiceUrls.Fabric.IndexOf(".")-$urlPrefix.Length) + "$(".privatelink." + $ro.ObjectServiceUrls.Fabric.Substring($ro.ObjectServiceUrls.Fabric.IndexOf(".")+1))"
             $wlbcmSvcUrl = "$($ro.ResourceId)-ab-" + $ro.ObjectServiceUrls.BCM.Substring($urlPrefix.Length,$ro.ObjectServiceUrls.BCM.IndexOf(".")-$urlPrefix.Length) + "$(".privatelink." + $ro.ObjectServiceUrls.BCM.Substring($ro.ObjectServiceUrls.BCM.IndexOf(".")+1))"
@@ -201,47 +206,54 @@ try
 
         $serviceStatuses = $fabricStatus, $wlbcmStatus
         $serviceUrlMap = @{$Fabric=$fabricChannelEncryptionKeyUrl ; $WLBCM=$wlbcmChannelEncryptionKeyUrl}
-        $serviceUrlMap
+
+        TraceMessage "***********************  Azure Backup Service Connectivity Tests ***************************" "White"
+        TraceMessage "Service urls for connectivity tests" "Cyan"
+        TraceMessage "$($serviceUrlMap | Out-String)" "Cyan"
+
         foreach ( $tlsSetting in $tlsSettings)
         {
-            TraceMessage "`n=============Trying TLS $tlsSetting==================="  "Yellow"
+            TraceMessage "=============Trying TLS $tlsSetting==================="  "Yellow"
             [System.Net.ServicePointManager]::SecurityProtocol = $tlsSetting
             
             TraceMessage "$([System.Net.ServicePointManager]::SecurityProtocol)"  "Cyan"
 
             foreach ( $serviceStatus in $serviceStatuses)
             {
-                TraceMessage "`nPinging $($serviceUrlMap[$($serviceStatus.Name)])"  "Yellow"
+                TraceMessage "Pinging $($serviceUrlMap[$($serviceStatus.Name)])"  "Yellow"
 
                 try
                 {
                     #Invoke REST API
                     $response = Invoke-RestMethod -Method Get -Uri $($serviceUrlMap[$($serviceStatus.Name)]) -Headers $Headers
-                    TraceMessage "`n$($serviceStatus.Name) Call successful"  "Green"
+                    TraceMessage "$($serviceStatus.Name) Call successful"  "Green"
                     $serviceStatus.$tlsSetting = "Green"
                 }
                 catch
                 {
-                    TraceMessage "`n$($serviceStatus.Name) Call failed"  "Red"
+                    TraceMessage "$($serviceStatus.Name) Call failed"  "Red"
                     TraceMessage $_.Exception.Message
                     TraceMessage $_.Exception.StackTrace
                     $serviceStatus.$tlsSetting = $_.Exception.Message
                 }
 
-                $Report.report.ConnectivityTests.Services.AppendChild($serviceStatus)
+                $Report.report.ConnectivityTests.Services.AppendChild($serviceStatus) | Out-null
             }
         }
+
+        TraceMessage "Service call test summary" "Cyan"
+        TraceMessage $($Report.report.ConnectivityTests.Services.Service | Out-String) "Cyan"
     }
     else
     {
-        TraceMessage "`nToken fetch failed"  "Red"
+        TraceMessage "Token fetch failed"  "Red"
         $Report.report.ConnectivityTests.AAD.Status = "Red"
         $Report.report.ConnectivityTests.AAD.Exception = $error
     }
 }
 catch
 {
-    TraceMessage "`nToken fetch failed"  "Red"
+    TraceMessage "Token fetch failed"  "Red"
     TraceMessage $_.Exception.StackTrace
 
     $Report.report.ConnectivityTests.AAD.Status = "Red"
@@ -255,6 +267,7 @@ try
     
     if ( $IsPrivateEndpointEnabled.IsPresent)
     {
+        TraceMessage "***********************  Storage Account DNS Resolution Tests ***************************" "White"
         $dns = $Report.report.PrivateEndpointTests.DNSResolutions.DNS[0].Clone()
 
         try
@@ -262,19 +275,20 @@ try
             $dnsMap = $workloadExtensionDiagnosticHelper.TryResolveStoragePrivateUrl("$ConfigJsonDirPath\AzureWLBackupCoordinatorSvc_config.json", $DllLogFilePath)  | ConvertFrom-Json
             if ($dnsMap -eq $null -or ($dnsMap.DNSEntry -eq $null) )
             {
-                TraceMessage "`nFailed to resolve storage url"  "Red"
+                TraceMessage "Failed to resolve storage url"  "Red"
             }
             else
             {
+                TraceMessage "Successfully resolved Storage url"  "Green"
                 $dns.DNSEntry = $dnsMap.DNSEntry.ToString()
                 $dns.PrivateIp = $dnsMap.PrivateIp
             }
 
-            $Report.report.PrivateEndpointTests.DNSResolutions.AppendChild($dns)
+            $Report.report.PrivateEndpointTests.DNSResolutions.AppendChild($dns) | Out-Null
         }
         catch
         {
-            TraceMessage "`nFailed to resolve storage url"  "Red"
+            TraceMessage "Failed to resolve storage url"  "Red"
             TraceMessage $_
         }
     }
@@ -282,10 +296,11 @@ try
     $tlsSettings = [System.Net.SecurityProtocolType]::Tls, [System.Net.SecurityProtocolType]::Tls11, [System.Net.SecurityProtocolType]::Tls12
     $storageStatus = $Report.report.ConnectivityTests.Storage
 
+    TraceMessage "***********************  Storage Account Connectivity Tests ***************************" "White"
     foreach ( $tlsSetting in $tlsSettings)
     {
-        TraceMessage "`n=============Trying TLS $tlsSetting==================="  "Yellow"
-        TraceMessage "`nPinging Storage"  "Yellow"
+        TraceMessage "=============Trying TLS $tlsSetting==================="  "Yellow"
+        TraceMessage "Pinging Storage"  "Yellow"
 
         try
         {
@@ -294,31 +309,34 @@ try
 
             if ($storageStatus.$tlsSetting -eq "Green")
             {
-                TraceMessage "`nStorage Call successful"  "Green"
+                TraceMessage "Storage Call successful"  "Green"
             }
             else
             {
-                TraceMessage "`nStorage Call failed"  "Red"
+                TraceMessage "Storage Call failed"  "Red"
             }
         }
         catch
         {
-            TraceMessage "`nStorage Call failed"  "Red"
+            TraceMessage "Storage Call failed"  "Red"
             TraceMessage $_.Exception.Message
             TraceMessage $_.Exception.StackTrace
             $storageStatus.$tlsSetting = $_.Exception.Message
         }
     }
+
+    
+    TraceMessage "Storage call test summary" "Cyan"
+    TraceMessage $($Report.report.ConnectivityTests.Storage | Out-String) "Cyan"
 }
 catch
 {
-    TraceMessage "`nConnectivity tests failed for Storage account" "Red"
+    TraceMessage "Connectivity tests failed for Storage account" "Red"
     TraceMessage $_.Exception.StackTrace
 }
 
 #TLS Settings
-
-TraceMessage "`n=============Fetching TLS settings==================="  "Yellow"
+TraceMessage "***********************  Fetching System TLS Settings ***************************" "White"
 
 try
 {
@@ -351,7 +369,7 @@ try
 }
 catch
 {
-    TraceMessage "`nFailed to determine TLS settings" "Red"
+    TraceMessage "Failed to determine TLS settings" "Red"
 }
 
 # Removing Temp file
@@ -360,6 +378,7 @@ if ( Test-Path -Path "$ScriptRoot\ProxySettings.txt")
     Remove-Item "$ScriptRoot\ProxySettings.txt"
 }
 
+TraceMessage "***********************  Fetching System Proxy Settings ***************************" "White"
 . $ScriptRoot\Get-ProxySettings.ps1 -LogFile "$ScriptRoot\ProxySettings.txt"
 $proxySettings = Get-Content "$ScriptRoot\ProxySettings.txt"
 
