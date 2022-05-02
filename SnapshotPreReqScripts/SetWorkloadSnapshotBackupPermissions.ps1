@@ -99,7 +99,7 @@ Write-Verbose "Azure context set for subscription $Subscription"
 
 $diskBackupReaderRoleName = "Disk Backup Reader"
 $diskSnapshotContributorRoleName = "Disk Snapshot Contributor"
-$backupServicePrincipalId = "f40e18f0-6544-45c2-9d24-639a8bb3b41a"
+$backupServicePrincipalId = (Get-AzADServicePrincipal -SearchString 'Backup Management Service').Id
 
 Write-Host "Assigning identity to $VirtualMachineNames" -ForegroundColor Blue
 $principalIds = AssignIdentityToVMs -UserAssignedServiceIdentityId $UserAssignedServiceIdentityId -VirtualMachineResourceGroup $VirtualMachineResourceGroup -VirtualMachineNames $VirtualMachineNames

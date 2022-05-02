@@ -52,7 +52,6 @@ snapshot_resource_group = args.snapshot_resource_group
 
 diskBackupReaderRoleName = "Disk Backup Reader"
 diskSnapshotContributorRoleName = "Disk Snapshot Contributor"
-backup_service_principalId = "f40e18f0-6544-45c2-9d24-639a8bb3b41a"
 
 output = os.system("az login -o tsv --only-show-errors > login.txt")
 output = os.system("az account set -s {} -o tsv --only-show-errors > context.txt".format(subscription))
@@ -63,6 +62,21 @@ if output == 0:
 else:
     print(bcolors.FAIL + "Script failed with unexpected error ... " + bcolors.ENDC)
     sys.exit()
+
+if os.path.isfile('backupMgmtPrincipalId.txt'):
+    os.remove('backupMgmtPrincipalId.txt')
+
+output = os.system('(az ad sp list --display-name "Backup Management Service" --query "[].{Id:objectId}" --output tsv) > backupMgmtPrincipalId.txt')
+
+if output == 0:
+    print(bcolors.OKGREEN + "Successfully fetched Backup Management Service Principal Id" + bcolors.ENDC)
+    pass
+else:
+    print(bcolors.FAIL + "Failed to get Backup Management Service Principal Id" + bcolors.ENDC)
+    sys.exit()
+
+with open('backupMgmtPrincipalId.txt',mode='r') as principalIdFile:
+    backup_service_principalId = principalIdFile.read()
 
 principalIds = assignIdentityToVMs(args.identity_id, vm_resource_group, vm_names, subscription)
 

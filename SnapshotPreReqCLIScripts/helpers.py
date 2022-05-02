@@ -27,9 +27,13 @@ import sys
 import time
 
 def assignRoleOnResourceGroup(PrincipalId, ResourceGroup, RoleName):
-    print(bcolors.OKBLUE + "Fetching assigned role " + RoleName + " for " + PrincipalId + " on resource group " + ResourceGroup + bcolors.ENDC)
+    PrincipalId = PrincipalId.strip()
+    print(bcolors.OKBLUE + "Fetching assigned role " + str(RoleName) + " for " + str(PrincipalId) + " on resource group " + str(ResourceGroup) + bcolors.ENDC)
 
-    output = os.system("az role assignment list -g {} --assignee {} --role {} -o tsv --only-show-errors > roleGet.txt".format(ResourceGroup, PrincipalId, "\"" + RoleName + "\"")) 
+    if os.path.isfile('roleGet.txt'):
+        os.remove('roleGet.txt')
+
+    output = os.system('az role assignment list -g {} --assignee {} --role {} -o tsv --only-show-errors > roleGet.txt'.format(ResourceGroup, PrincipalId, "\"" + RoleName + "\"")) 
 
     #Error handling
     if output != 0:
@@ -39,13 +43,13 @@ def assignRoleOnResourceGroup(PrincipalId, ResourceGroup, RoleName):
 
     print(bcolors.OKGREEN + "Role assignment with role  " + RoleName + " for " + PrincipalId + " on resource group " + ResourceGroup + " fetched successfully " + bcolors.ENDC)
 
-    role = [line[:-1] for line in fileinput.input(files='roleGet.txt')]
+    role = [line[:-1] for line in fileinput.input(files='roleGet.txt')] if os.path.isfile('roleGet.txt') else ""
 
     if len(role):
         print(bcolors.OKBLUE + "Already assigned " + RoleName + " role on resource group " + ResourceGroup + " to "+ PrincipalId + bcolors.ENDC)
     else:
         print(bcolors.OKBLUE + "Assigning role " + RoleName + " to " + PrincipalId + " on resource group " + ResourceGroup + bcolors.ENDC)
-        output = os.system("az role assignment create -g {} --assignee {} --role {} -o tsv --only-show-errors".format(ResourceGroup, PrincipalId, "\"" + RoleName + "\""))
+        output = os.system('az role assignment create -g {} --assignee {} --role {} -o tsv --only-show-errors'.format(ResourceGroup, PrincipalId, "\"" + RoleName + "\""))
 
         if output != 0:
             print(bcolors.OKBLUE + "Exception caught while assigning role" + bcolors.ENDC)
@@ -57,7 +61,10 @@ def assignRoleOnResourceGroup(PrincipalId, ResourceGroup, RoleName):
 def assignRoleOnScope(PrincipalId, RoleName, Scope):
     print(bcolors.OKBLUE + "Fetching assigned role " + RoleName + " for " + PrincipalId + " on scope " + Scope + bcolors.ENDC)
 
-    output = os.system("az role assignment list --assignee {} --role {} --scope {} -o tsv --only-show-errors > roleGetScope.txt".format( PrincipalId, "\"" + RoleName + "\"", Scope)) 
+    if os.path.isfile('roleGetScope.txt'):
+        os.remove('roleGetScope.txt')
+
+    output = os.system('az role assignment list --assignee {} --role {} --scope {} -o tsv --only-show-errors > roleGetScope.txt'.format( PrincipalId, "\"" + RoleName + "\"", Scope)) 
 
     #Error handling
     if output != 0:
@@ -73,7 +80,7 @@ def assignRoleOnScope(PrincipalId, RoleName, Scope):
         print(bcolors.OKBLUE + "Already assigned " + RoleName + " role on scope " + Scope + " to " + PrincipalId + bcolors.ENDC)
     else:
         print(bcolors.OKBLUE + "Assigning role " + RoleName + " to " + PrincipalId + " on scope " + Scope + bcolors.ENDC)
-        output = os.system("az role assignment create --assignee {} --role {} --scope {} -o tsv --only-show-errors".format(PrincipalId, "\"" + RoleName + "\"", Scope))
+        output = os.system('az role assignment create --assignee {} --role {} --scope {} -o tsv --only-show-errors'.format(PrincipalId, "\"" + RoleName + "\"", Scope))
 
         if output != 0:
             print(bcolors.FAIL + "Exception caught while assigning role" + bcolors.ENDC)
@@ -86,8 +93,11 @@ def assignIdentityToVMs(UserAssignedServiceIdentityId, VirtualMachineResourceGro
     service_principal_id = ""
     principalIds = []
 
+    if os.path.isfile('msiPrincipal.txt'):
+        os.remove('msiPrincipal.txt')
+
     if UserAssignedServiceIdentityId is not None:             
-        output = os.system("az identity show --ids {} -o tsv --only-show-errors > msiPrincipal.txt".format(UserAssignedServiceIdentityId))
+        output = os.system('az identity show --ids {} -o tsv --only-show-errors > msiPrincipal.txt'.format(UserAssignedServiceIdentityId))
 
         if output != 0:
             print(bcolors.FAIL + "Given user assigned identity is not found or script failed with unexpected error ..." + bcolors.ENDC)
@@ -103,7 +113,7 @@ def assignIdentityToVMs(UserAssignedServiceIdentityId, VirtualMachineResourceGro
         for virtualMachineName in VirtualMachineNames:            
             identity = "\"" + UserAssignedServiceIdentityId + "\""
             print(bcolors.OKBLUE + "Enabling user assigned identity on virtual machine " + virtualMachineName + bcolors.ENDC) 
-            output = os.system("az vm identity assign -n {} -g {} --subscription {} --identities {} -o tsv --only-show-errors > identityAssign.txt".format(virtualMachineName, VirtualMachineResourceGroup, Subscription, identity))
+            output = os.system('az vm identity assign -n {} -g {} --subscription {} --identities {} -o tsv --only-show-errors > identityAssign.txt'.format(virtualMachineName, VirtualMachineResourceGroup, Subscription, identity))
             
             if output != 0:
                 print(bcolors.FAIL + "script failed with unexpected error ..." + bcolors.ENDC)
@@ -116,14 +126,14 @@ def assignIdentityToVMs(UserAssignedServiceIdentityId, VirtualMachineResourceGro
         
         for virtualMachineName in VirtualMachineNames:
 
-            output = os.system("az vm identity show -n {} -g {} --subscription {} -o tsv --only-show-errors > identityShow.txt".format(virtualMachineName, VirtualMachineResourceGroup, Subscription))
+            output = os.system('az vm identity show -n {} -g {} --subscription {} -o tsv --only-show-errors > identityShow.txt'.format(virtualMachineName, VirtualMachineResourceGroup, Subscription))
 
             identity = [line[:-1] for line in fileinput.input(files='identityShow.txt')]
 
             if len(identity) == 0 or "systemassigned" not in identity[0].lower():
                 print(bcolors.OKBLUE + "Enabling system assigned identity on virtual machine " + virtualMachineName + bcolors.ENDC) 
 
-                output = os.system("az vm identity assign -n {} -g {} --subscription {} -o tsv --only-show-errors > identityAssign.txt".format(virtualMachineName, VirtualMachineResourceGroup, Subscription))
+                output = os.system('az vm identity assign -n {} -g {} --subscription {} -o tsv --only-show-errors > identityAssign.txt'.format(virtualMachineName, VirtualMachineResourceGroup, Subscription))
 
                 if output != 0:
                     print(bcolors.FAIL + "Script failed with unexpected error while assigning VM identity ..." + bcolors.ENDC)
@@ -133,7 +143,7 @@ def assignIdentityToVMs(UserAssignedServiceIdentityId, VirtualMachineResourceGro
                 print(bcolors.OKGREEN + "Successfully assigned system identity to VM " + virtualMachineName + bcolors.ENDC)
                 time.sleep(10)
                 
-                output = os.system("az vm identity show -n {} -g {} --subscription {} -o tsv --only-show-errors > identityShow.txt".format(virtualMachineName, VirtualMachineResourceGroup, Subscription)) 
+                output = os.system('az vm identity show -n {} -g {} --subscription {} -o tsv --only-show-errors > identityShow.txt'.format(virtualMachineName, VirtualMachineResourceGroup, Subscription)) 
             else:
                 print(bcolors.OKGREEN + "System assigned identity already enabled on virtual machine " + virtualMachineName + bcolors.ENDC) 
             
