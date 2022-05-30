@@ -1,7 +1,7 @@
 # Azure Workoad Snapshot Pre-Req Scripts
 
-> Contains the scripts for setting up the permissions for virtual machine identity on required resources
-> and resource group for snapshot backups dones by Azure workload backup extensions.
+> Azure Backup requires permissions to perform snapshots on disks and place them in user specified resource groups. These permissions are inherited via the MSI 
+> associated with that virtual machine. The below scripts help the user set the required permissions to the MSI associated with that VM at relevant scopes.
 
 + For Backup
 
@@ -9,8 +9,8 @@ Azure virtual machine containing the source workload requires the following role
 
 Resource (Access control)  |Role   
 ------ | ------
-Disk(s) attached to the source VM (or the Disk RG), that are getting snapshotted |Disk backup reader |
-|Resource group (RG) in which the snapshots taken would be stored (specified at the time of creating backup policy) |Disk snapshot contributor  |
+Disk(s) attached to the source VM for which snapshot needs to be taken. For ease-of-use, we ask the user for the disk RG so that the process need not be repeated if new disks are added in the future under the same RG |Disk backup reader |
+|Resource group (RG) in which the disk snapshots would be stored (specified at the time of creating backup policy) |Disk snapshot contributor  |
 
 + For Restore
 
@@ -20,7 +20,7 @@ Resource (Access control)  |Role
 ------ | ------
 |Resource group (RG) in which the snapshots taken would be stored (specified at the time of creating backup policy)   |Disk snapshot contributor  |
 |Target Disk RG where all disks will be created during restore  |Disk Restore operator   |
-|Source Disk RG (RG where all existing disks of target VM are present)   |Disk Restore operator   |
+|Attached Disk RG (RG where all existing disks of target VM are present)   |Disk Restore operator   |
 |Target VM     |Virtual Machine Contributor    |
 
 + For Snapshot deletion after retention period
@@ -42,7 +42,7 @@ The following Powershell modules are required for the scripts
 ## Usage 
 
 ### Backup
-Before the snapshot backup, use the following script to give the required roles to the virtual machine system identity
+If you are using system-assigned identity for the backed up VM, use the following script to give the required roles to the virtual machine system identity, before configuring the snapshot backup. Once configured, snapshot backups will be taken as per policy by Azure Backup service.
 
 ```powershell
 .\SetWorkloadSnapshotBackupPermissions.ps1 -Subscription <SubscriptionId> `
@@ -52,7 +52,7 @@ Before the snapshot backup, use the following script to give the required roles 
             -SnapshotResourceGroup <SnapshotResourceGroupName>
 ```
 
-Before the snapshot backup, use the following script to give the required roles to the user identity
+If you are using user-assigned identity for the backed up VM, use the following script to give the required roles to the virtual machine use-assigned identity, before configuring the snapshot backup. Once configured, snapshot backups will be taken as per policy by Azure Backup service.
 
 ```powershell
 .\SetWorkloadSnapshotBackupPermissions.ps1 -Subscription <SubscriptionId> `
@@ -70,23 +70,23 @@ Get-Help SetWorkloadSnapshotBackupPermissions.ps1
 
 ### Restore
 
-Before the snapshot disk restore, use the following script to give the required roles to the virtual machine system identity
+If you are using user-assigned identity for the target VM, use the following script to give the required roles to the target virtual machine system identity, before triggering the snapshot restore.
 
 ```powershell
 .\SetWorkloadSnapshotRestorePermissions.ps1 -Subscription <SubscriptionId> `
             -VirtualMachineResourceGroup <VMResourceGroup> `
-            -VirtualMachineName @(<SourceWorkloadVMName1>,<SourceWorkloadVMName2>) `
-            -DiskResourceGroups @(<DiskResourceGroupsName1>,<DiskResourceGroupsName2>) `
+            -VirtualMachineName @(<TargetVMName1>) `
+            -DiskResourceGroups @(<AttachedDiskResourceGroupsName1>,<TargetDiskResourceGroupsName2>) `
             -SnapshotResourceGroup <SnapshotResourceGroupName>
 ```
 
-Before the snapshot backup, use the following script to give the required roles to the user identity
+If you are using user-assigned identity for the target VM, use the following script to give the required roles to the target virtual machine user identity, before triggering the snapshot restore.
 
 ```powershell
 .\SetWorkloadSnapshotRestorePermissions.ps1 -Subscription <SubscriptionId> `
             -VirtualMachineResourceGroup <VMResourceGroup> `
-            -VirtualMachineName @(<SourceWorkloadVMName1>,<SourceWorkloadVMName2>) `
-            -DiskResourceGroups @(<DiskResourceGroupsName1>,<DiskResourceGroupsName2>) `
+            -VirtualMachineName @(<TargetVMName1>) `
+            -DiskResourceGroups @(<AttachedDiskResourceGroupsName1>,<TargetDiskResourceGroupsName2>) `
             -SnapshotResourceGroup <SnapshotResourceGroupName> `
             -UserAssignedServiceIdentityId <UserIdentityPrincipalARMId>
 ```
