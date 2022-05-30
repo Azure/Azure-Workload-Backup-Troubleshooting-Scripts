@@ -6,6 +6,11 @@
 These scripts can be utilised to root cause the problems faced by customers during times of critical database backups and database restores.
 Additionally, some of these scripts are can be used for automating operations and simplifying user experience for workload backup.
 
+## Key scenarios covered
+
+- Troubleshooting outbound network connectivity requirements for streaming backup services for SQL and HANA
+- Appropriate permission setting to VM managed identity (system-assigned or user-assigned) for integrating with database consistent snapshots with streaming backup services for SQL and HANA
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
