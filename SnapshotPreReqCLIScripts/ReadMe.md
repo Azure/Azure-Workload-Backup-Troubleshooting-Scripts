@@ -1,6 +1,6 @@
 # Azure Workoad Snapshot Pre-Req Scripts for CLI
 
-> Azure Backup requires permissions to perform snapshots on disks and place them in user specified resource groups. These permissions are inherited via the MSI 
+> Azure Backup is integrating database consistent snapshots to the stream based backup solutions for SQL and HANA. The Azure Backup service requires permissions to perform snapshots on disks and place them in user specified resource groups. These permissions are inherited via the MSI 
 > associated with that virtual machine. The below scripts help the user set the required permissions to the MSI associated with that VM at relevant scopes.
 
 
