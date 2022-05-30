@@ -1,7 +1,7 @@
 # Azure Workoad Snapshot Pre-Req Scripts for CLI
 
-> Contains the scripts for setting up the permissions for virtual machine identity on required resources
-> and resource group for snapshot backups dones by Azure workload backup extensions.
+> Azure Backup requires permissions to perform snapshots on disks and place them in user specified resource groups. These permissions are inherited via the MSI 
+> associated with that virtual machine. The below scripts help the user set the required permissions to the MSI associated with that VM at relevant scopes.
 
 
 
@@ -11,8 +11,8 @@ Azure virtual machine containing the source workload requires the following role
 
 Resource (Access control)  |Role   
 ------ | ------
-Disk(s) attached to the source VM (or the Disk RG), that are getting snapshotted |Disk backup reader |
-|Resource group (RG) in which the snapshots taken would be stored (specified at the time of creating backup policy) |Disk snapshot contributor  |
+Disk(s) attached to the source VM for which snapshot needs to be taken. For ease-of-use, we ask the user for the disk RG so that the process need not be repeated if new disks are added in the future under the same RG |Disk backup reader |
+|Resource group (RG) in which the disk snapshots would be stored (specified at the time of creating backup policy) |Disk snapshot contributor  |
 
 + For Restore
 
@@ -22,7 +22,7 @@ Resource (Access control)  |Role
 ------ | ------
 |Resource group (RG) in which the snapshots taken would be stored (specified at the time of creating backup policy)   |Disk snapshot contributor  |
 |Target Disk RG where all disks will be created during restore  |Disk Restore operator   |
-|Source Disk RG (RG where all existing disks of target VM are present)   |Disk Restore operator   |
+|Attached Disk RG (RG where all existing disks of target VM are present)   |Disk Restore operator   |
 |Target VM     |Virtual Machine Contributor    |
 
 + For Snapshot deletion after retention period
@@ -40,13 +40,13 @@ Az CLI module is required to be installed on your machine before running the pyt
 ## Usage 
 
 ### Backup
-Before the snapshot backup, use the following script to give the required roles to the virtual machine system identity
+If you are using system-assigned identity for the backed up VM, use the following script to give the required roles to the virtual machine system identity, before configuring the snapshot backup. Once configured, snapshot backups will be taken as per policy by Azure Backup service.
 
 ```cmd
 python SetWorkloadSnapshotBackupPermissions.py --subscription <SubscriptionId> --vm-resource-group <VMResourceGroup> --vm-names  <SourceWorkloadVMName1> <SourceWorkloadVMName2> --disk-resource-groups <DiskResourceGroupsName> <DiskResourceGroupsName> --snapshot-resource-group <SnapshotResourceGroupName>
 ```
 
-Before the snapshot backup, use the following script to give the required roles to the user identity
+If you are using user-assigned identity for the backed up VM, use the following script to give the required roles to the virtual machine use-assigned identity, before configuring the snapshot backup. Once configured, snapshot backups will be taken as per policy by Azure Backup service.
 
 ```cmd
 python SetWorkloadSnapshotBackupPermissions.py  --subscription <SubscriptionId> --vm-resource-group <VMResourceGroup> --vm-names  <SourceWorkloadVMName1> <SourceWorkloadVMName2> --disk-resource-groups <DiskResourceGroupsName> <DiskResourceGroupsName> --snapshot-resource-group <SnapshotResourceGroupName> --identity-id <UserIdentityId>
@@ -59,16 +59,16 @@ python SetWorkloadSnapshotBackupPermissions.py --help
 
 ### Restore
 
-Before the snapshot disk restore, use the following script to give the required roles to the virtual machine system identity
+If you are using user-assigned identity for the target VM, use the following script to give the required roles to the target virtual machine system identity, before triggering the snapshot restore.
 
 ```cmd
-python SetWorkloadSnapshotRestorePermissions.py --subscription <SubscriptionId> --vm-resource-group <VMResourceGroup> --vm-names  <SourceWorkloadVMName1> <SourceWorkloadVMName2> --disk-resource-groups <DiskResourceGroupsName> <DiskResourceGroupsName> --snapshot-resource-group <SnapshotResourceGroupName> 
+python SetWorkloadSnapshotRestorePermissions.py --subscription <SubscriptionId> --vm-resource-group <VMResourceGroup> --vm-names  <TargetVMName1> --disk-resource-groups <AttachedDiskResourceGroupsName> <TargetDiskResourceGroupsName> --snapshot-resource-group <SnapshotResourceGroupName> 
 ```
 
-Before the snapshot backup, use the following script to give the required roles to the user identity
+If you are using user-assigned identity for the target VM, use the following script to give the required roles to the target virtual machine user identity, before triggering the snapshot restore.
 
 ```cmd
-python SetWorkloadSnapshotRestorePermissions.py ---subscription <SubscriptionId> --vm-resource-group <VMResourceGroup> --vm-names  <SourceWorkloadVMName1> <SourceWorkloadVMName2> --disk-resource-groups DiskResourceGroupsName> <DiskResourceGroupsName> --snapshot-resource-group <SnapshotResourceGroupName> --identity-id <UserIdentityId>
+python SetWorkloadSnapshotRestorePermissions.py ---subscription <SubscriptionId> --vm-resource-group <VMResourceGroup> --vm-names  <TargetVMName1> --disk-resource-groups <AttachedDiskResourceGroupsName> <TargetDiskResourceGroupsName> --snapshot-resource-group <SnapshotResourceGroupName> --identity-id <UserIdentityId>
 ```
 
 Run the following to get more help on the parameters
