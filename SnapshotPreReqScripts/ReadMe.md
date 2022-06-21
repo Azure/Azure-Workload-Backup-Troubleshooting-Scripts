@@ -70,7 +70,7 @@ Get-Help SetWorkloadSnapshotBackupPermissions.ps1
 
 ### Restore
 
-If you are using user-assigned identity for the target VM, use the following script to give the required roles to the target virtual machine system identity, before triggering the snapshot restore.
+If you are using system-assigned identity for the target VM, use the following script to give the required roles to the target virtual machine system identity, before triggering the snapshot restore.
 
 ```powershell
 .\SetWorkloadSnapshotRestorePermissions.ps1 -Subscription <SubscriptionId> `
