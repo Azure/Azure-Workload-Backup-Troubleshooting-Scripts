@@ -38,10 +38,12 @@ Set-ItemProperty -Path Registry::"HKEY_USERS\S-1-5-80-1631947889-4033244730-3205
 
 $obj = Get-ItemProperty -Path Registry::"HKEY_USERS\S-1-5-18\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
 Write-Host "ProxyEnable settings for the current user $($obj.ProxyEnable)"
-Write-Host "ProxyServer configured for the current user $($obj.Proxyserver)"
+Write-Host "ProxyServer configured for the current user $($obj.ProxyServer)"
+Write-Host "ProxyOverride configured for the current user $($obj.ProxyOverride)"
 
 Set-ItemProperty -Path Registry::"HKEY_USERS\S-1-5-80-1631947889-4033244730-3205203906-53534054-4184208151\Software\Microsoft\Windows\CurrentVersion\Internet Settings" -Name ProxyEnable -Value $obj.ProxyEnable  
-Set-ItemProperty -Path Registry::"HKEY_USERS\S-1-5-80-1631947889-4033244730-3205203906-53534054-4184208151\Software\Microsoft\Windows\CurrentVersion\Internet Settings" -Name Proxyserver -Value $obj.Proxyserver
+Set-ItemProperty -Path Registry::"HKEY_USERS\S-1-5-80-1631947889-4033244730-3205203906-53534054-4184208151\Software\Microsoft\Windows\CurrentVersion\Internet Settings" -Name ProxyServer -Value $obj.ProxyServer
+Set-ItemProperty -Path Registry::"HKEY_USERS\S-1-5-80-1631947889-4033244730-3205203906-53534054-4184208151\Software\Microsoft\Windows\CurrentVersion\Internet Settings" -Name ProxyOverride -Value $obj.ProxyOverride
 
 Write-Host "Proxy Settings set for NT Service\AzureWLBackupPluginSvc user" -ForegroundColor "Green"
 # SIG # Begin signature block
